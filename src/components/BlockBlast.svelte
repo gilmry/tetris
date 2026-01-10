@@ -330,7 +330,7 @@
         on:touchmove={handleTouchMove}
         on:touchend={handleTouchEnd}
       >
-        <div class="block-preview">
+        <div class="block-preview" style="grid-template-columns: repeat({block.shape[0].length}, 35px);">
           {#each block.shape as row}
             {#each row as cell}
               <div
@@ -350,7 +350,7 @@
       class="dragging-ghost"
       style="left: {dragPosition.x}px; top: {dragPosition.y}px;"
     >
-      <div class="ghost-block">
+      <div class="ghost-block" style="grid-template-columns: repeat({draggedBlock.shape[0].length}, 35px);">
         {#each draggedBlock.shape as row}
           {#each row as cell}
             <div
@@ -505,10 +505,6 @@
     gap: 2px;
   }
 
-  .block-preview {
-    grid-template-columns: repeat(auto-fit, 35px);
-  }
-
   .block-cell {
     width: 35px;
     height: 35px;
@@ -589,7 +585,6 @@
   .ghost-block {
     display: grid;
     gap: 2px;
-    grid-template-columns: repeat(auto-fit, 35px);
     animation: float 0.5s ease-in-out infinite alternate;
   }
 
