@@ -35,6 +35,10 @@
   let draggedBlockIndex: number = -1;
   let gameOver = false;
   let animatingCells: Set<string> = new Set();
+  let dragPosition = { x: 0, y: 0 };
+  let previewPosition = { row: -1, col: -1 };
+  let isDragging = false;
+  let gameBoardElement: HTMLElement | null = null;
 
   interface Block {
     shape: number[][];
@@ -178,9 +182,27 @@
     return false;
   }
 
+  function getGridCellFromPosition(x: number, y: number): { row: number, col: number } {
+    if (!gameBoardElement) return { row: -1, col: -1 };
+
+    const rect = gameBoardElement.getBoundingClientRect();
+    const relativeX = x - rect.left - 10; // 10px padding
+    const relativeY = y - rect.top - 10;
+
+    const cellWithGap = BLOCK_SIZE + 3; // cell + gap
+    const col = Math.floor(relativeX / cellWithGap);
+    const row = Math.floor(relativeY / cellWithGap);
+
+    if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+      return { row, col };
+    }
+    return { row: -1, col: -1 };
+  }
+
   function handleDragStart(block: Block, index: number) {
     draggedBlock = block;
     draggedBlockIndex = index;
+    isDragging = true;
   }
 
   function handleDrop(row: number, col: number) {
@@ -206,15 +228,36 @@
 
     draggedBlock = null;
     draggedBlockIndex = -1;
+    isDragging = false;
+    previewPosition = { row: -1, col: -1 };
+  }
+
+  function handleDragMove(event: DragEvent) {
+    if (!draggedBlock) return;
+
+    dragPosition = { x: event.clientX, y: event.clientY };
+    const gridPos = getGridCellFromPosition(event.clientX, event.clientY);
+    previewPosition = gridPos;
   }
 
   function handleTouchStart(event: TouchEvent, block: Block, index: number) {
     event.preventDefault();
     handleDragStart(block, index);
+
+    const touch = event.touches[0];
+    dragPosition = { x: touch.clientX, y: touch.clientY };
   }
 
   function handleTouchMove(event: TouchEvent) {
     event.preventDefault();
+
+    if (!draggedBlock) return;
+
+    const touch = event.touches[0];
+    dragPosition = { x: touch.clientX, y: touch.clientY };
+
+    const gridPos = getGridCellFromPosition(touch.clientX, touch.clientY);
+    previewPosition = gridPos;
   }
 
   function handleTouchEnd(event: TouchEvent) {
@@ -223,19 +266,16 @@
     if (!draggedBlock) return;
 
     const touch = event.changedTouches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const gridPos = getGridCellFromPosition(touch.clientX, touch.clientY);
 
-    if (element && element.classList.contains('grid-cell')) {
-      const row = parseInt(element.getAttribute('data-row') || '-1');
-      const col = parseInt(element.getAttribute('data-col') || '-1');
-
-      if (row >= 0 && col >= 0) {
-        handleDrop(row, col);
-      }
+    if (gridPos.row >= 0 && gridPos.col >= 0) {
+      handleDrop(gridPos.row, gridPos.col);
+    } else {
+      draggedBlock = null;
+      draggedBlockIndex = -1;
+      isDragging = false;
+      previewPosition = { row: -1, col: -1 };
     }
-
-    draggedBlock = null;
-    draggedBlockIndex = -1;
   }
 
   onMount(() => {
@@ -252,19 +292,29 @@
     </div>
   </div>
 
-  <div class="game-board">
+  <div class="game-board" bind:this={gameBoardElement} on:dragover|preventDefault={handleDragMove}>
     {#each grid as row, rowIndex}
       {#each row as cell, colIndex}
+        {@const isPreview = isDragging && draggedBlock &&
+          rowIndex >= previewPosition.row &&
+          rowIndex < previewPosition.row + draggedBlock.shape.length &&
+          colIndex >= previewPosition.col &&
+          colIndex < previewPosition.col + draggedBlock.shape[0].length &&
+          draggedBlock.shape[rowIndex - previewPosition.row]?.[colIndex - previewPosition.col] === 1}
+        {@const canPlace = previewPosition.row >= 0 && previewPosition.col >= 0 &&
+          draggedBlock && canPlaceBlock(draggedBlock, previewPosition.row, previewPosition.col)}
         <div
           class="grid-cell"
           class:filled={cell !== 0}
           class:animating={animatingCells.has(`${rowIndex}-${colIndex}`)}
+          class:preview={isPreview}
+          class:preview-valid={isPreview && canPlace}
+          class:preview-invalid={isPreview && !canPlace}
           data-row={rowIndex}
           data-col={colIndex}
           style="background-color: {cell ? COLORS[cell - 1] : '#2a2a4e'}"
           on:drop|preventDefault={() => handleDrop(rowIndex, colIndex)}
           on:dragover|preventDefault
-          on:click={() => handleDrop(rowIndex, colIndex)}
         />
       {/each}
     {/each}
@@ -294,6 +344,25 @@
       </div>
     {/each}
   </div>
+
+  {#if isDragging && draggedBlock}
+    <div
+      class="dragging-ghost"
+      style="left: {dragPosition.x}px; top: {dragPosition.y}px;"
+    >
+      <div class="ghost-block">
+        {#each draggedBlock.shape as row}
+          {#each row as cell}
+            <div
+              class="ghost-cell"
+              class:filled={cell === 1}
+              style="background-color: {cell ? draggedBlock.color : 'transparent'}"
+            />
+          {/each}
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   {#if gameOver}
     <div class="game-over-overlay">
@@ -380,6 +449,23 @@
   .grid-cell.animating {
     animation: pulse 0.3s ease-in-out;
     transform: scale(1.1);
+  }
+
+  .grid-cell.preview {
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    z-index: 10;
+  }
+
+  .grid-cell.preview-valid {
+    background-color: rgba(152, 216, 200, 0.6) !important;
+    border-color: #98D8C8;
+    box-shadow: 0 0 15px rgba(152, 216, 200, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+
+  .grid-cell.preview-invalid {
+    background-color: rgba(255, 107, 107, 0.4) !important;
+    border-color: #FF6B6B;
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
   }
 
   @keyframes pulse {
@@ -491,6 +577,38 @@
     transform: scale(0.95);
   }
 
+  .dragging-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 0.9;
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+  }
+
+  .ghost-block {
+    display: grid;
+    gap: 2px;
+    grid-template-columns: repeat(auto-fit, 35px);
+    animation: float 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes float {
+    from { transform: translateY(0px); }
+    to { transform: translateY(-5px); }
+  }
+
+  .ghost-cell {
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  .ghost-cell.filled {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  }
+
   @media (max-width: 600px) {
     h1 {
       font-size: 2rem;
@@ -516,6 +634,11 @@
     .score-display {
       font-size: 1.5rem;
       padding: 0.5rem 1.5rem;
+    }
+
+    .ghost-cell {
+      width: 30px;
+      height: 30px;
     }
   }
 </style>
