@@ -56,12 +56,142 @@
     };
   }
 
+  function analyzeGrid(): { emptySpaces: number, smallGaps: number[], almostFullLines: number[] } {
+    let emptySpaces = 0;
+    const smallGaps: number[] = [];
+    const almostFullLines: number[] = [];
+
+    // Compter les espaces vides
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        if (grid[row][col] === 0) emptySpaces++;
+      }
+    }
+
+    // Détecter les lignes presque complètes (6+ blocs sur 8)
+    for (let row = 0; row < GRID_SIZE; row++) {
+      const filled = grid[row].filter(cell => cell !== 0).length;
+      if (filled >= 6) {
+        almostFullLines.push(GRID_SIZE - filled);
+      }
+    }
+
+    // Détecter les colonnes presque complètes
+    for (let col = 0; col < GRID_SIZE; col++) {
+      let filled = 0;
+      for (let row = 0; row < GRID_SIZE; row++) {
+        if (grid[row][col] !== 0) filled++;
+      }
+      if (filled >= 6) {
+        almostFullLines.push(GRID_SIZE - filled);
+      }
+    }
+
+    // Détecter les petits trous (1x1, 2x1, 1x2)
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        if (grid[row][col] === 0) {
+          smallGaps.push(1);
+        }
+      }
+    }
+
+    return { emptySpaces, smallGaps, almostFullLines };
+  }
+
+  function createSmartBlock(): Block {
+    const analysis = analyzeGrid();
+    const totalCells = GRID_SIZE * GRID_SIZE;
+    const fillRatio = (totalCells - analysis.emptySpaces) / totalCells;
+
+    let priorityShapes: number[][];
+
+    // Si la grille est très pleine (>75%), prioriser les petites formes
+    if (fillRatio > 0.75) {
+      priorityShapes = [
+        [[1]], // 1x1
+        [[1, 1]], // 1x2
+        [[1], [1]], // 2x1
+        [[1, 1, 1]], // 1x3
+      ];
+    }
+    // Si on a des lignes presque complètes, proposer des formes qui peuvent les compléter
+    else if (analysis.almostFullLines.length > 0) {
+      const gapSize = Math.min(...analysis.almostFullLines);
+      if (gapSize === 1) {
+        priorityShapes = [[[1]], [[1], [1]]];
+      } else if (gapSize === 2) {
+        priorityShapes = [[[1, 1]], [[1], [1]], [[1, 1], [1, 1]]];
+      } else {
+        priorityShapes = [[[1, 1, 1]], [[1], [1], [1]], [[1, 1], [1, 1]]];
+      }
+    }
+    // Sinon, mix de formes avec préférence pour les moyennes
+    else {
+      priorityShapes = [
+        [[1]], // 1x1
+        [[1, 1]], // 1x2
+        [[1], [1]], // 2x1
+        [[1, 1, 1]], // 1x3
+        [[1, 1], [1, 1]], // 2x2
+        [[1, 0], [1, 1]], // L
+        [[0, 1], [1, 1]], // L inversé
+      ];
+    }
+
+    // 70% du temps, utiliser les formes prioritaires
+    const usePriority = Math.random() < 0.7;
+    const shapePool = usePriority ? priorityShapes : BLOCK_SHAPES;
+
+    const shape = shapePool[Math.floor(Math.random() * shapePool.length)];
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+    return {
+      shape: JSON.parse(JSON.stringify(shape)),
+      color,
+      id: Date.now() + Math.random()
+    };
+  }
+
+  function canAnyBlockBePlaced(blocks: Block[]): boolean {
+    for (const block of blocks) {
+      for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+          if (canPlaceBlock(block, row, col)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   function generateBlocks() {
-    availableBlocks = [
-      createRandomBlock(),
-      createRandomBlock(),
-      createRandomBlock()
-    ];
+    const newBlocks: Block[] = [];
+
+    // Générer 3 blocs intelligents
+    for (let i = 0; i < 3; i++) {
+      newBlocks.push(createSmartBlock());
+    }
+
+    // S'assurer qu'au moins 2 blocs peuvent être placés
+    let attempts = 0;
+    while (!canAnyBlockBePlaced(newBlocks) && attempts < 10) {
+      // Remplacer par des formes plus petites
+      newBlocks[0] = {
+        shape: [[1]],
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        id: Date.now() + Math.random()
+      };
+      newBlocks[1] = {
+        shape: [[1, 1]],
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        id: Date.now() + Math.random() + 0.1
+      };
+      attempts++;
+    }
+
+    availableBlocks = newBlocks;
   }
 
   function initGame() {
