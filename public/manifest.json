@@ -1,0 +1,23 @@
+{
+  "name": "Tetris pour Enfants",
+  "short_name": "Tetris Kids",
+  "description": "Un jeu Tetris coloré et simple pour les enfants",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#16213e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+---
+import Tetris from '../components/Tetris.svelte';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Un jeu Tetris coloré et simple pour les enfants" />
+    <meta name="theme-color" content="#16213e" />
+
+    <title>Tetris Kids - Jeu Amusant</title>
+
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tetris Kids" />
+
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow-x: hidden;
+        touch-action: manipulation;
+      }
+
+      html, body {
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered'))
+            .catch(err => console.log('SW registration failed'));
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <Tetris client:load />
+  </body>
+</html>

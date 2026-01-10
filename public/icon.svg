@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#16213e" rx="64"/>
+  <g transform="translate(64, 64)">
+    <rect x="0" y="0" width="90" height="90" fill="#FF6B6B" rx="8"/>
+    <rect x="97" y="0" width="90" height="90" fill="#4ECDC4" rx="8"/>
+    <rect x="194" y="0" width="90" height="90" fill="#45B7D1" rx="8"/>
+    <rect x="291" y="0" width="90" height="90" fill="#FFA07A" rx="8"/>
+
+    <rect x="0" y="97" width="90" height="90" fill="#98D8C8" rx="8"/>
+    <rect x="97" y="97" width="90" height="90" fill="#F7DC6F" rx="8"/>
+    <rect x="194" y="97" width="90" height="90" fill="#BB8FCE" rx="8"/>
+    <rect x="291" y="97" width="90" height="90" fill="#FF6B6B" rx="8"/>
+
+    <rect x="0" y="194" width="90" height="90" fill="#4ECDC4" rx="8"/>
+    <rect x="97" y="194" width="90" height="90" fill="#45B7D1" rx="8"/>
+    <rect x="194" y="194" width="90" height="90" fill="#FFA07A" rx="8"/>
+    <rect x="291" y="194" width="90" height="90" fill="#98D8C8" rx="8"/>
+
+    <rect x="0" y="291" width="90" height="90" fill="#F7DC6F" rx="8"/>
+    <rect x="97" y="291" width="90" height="90" fill="#BB8FCE" rx="8"/>
+    <rect x="194" y="291" width="90" height="90" fill="#FF6B6B" rx="8"/>
+    <rect x="291" y="291" width="90" height="90" fill="#4ECDC4" rx="8"/>
+  </g>
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#FFD93D" text-anchor="middle">TETRIS</text>
+</svg>
