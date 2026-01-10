@@ -1,7 +1,7 @@
 {
-  "name": "Tetris pour Enfants",
-  "short_name": "Tetris Kids",
-  "description": "Un jeu Tetris coloré et simple pour les enfants",
+  "name": "Jeux pour Enfants",
+  "short_name": "Jeux Kids",
+  "description": "Jeux colorés et amusants pour enfants : Tetris et Block Blast",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",

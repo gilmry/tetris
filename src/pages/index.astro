@@ -1,5 +1,5 @@
 ---
-import Tetris from '../components/Tetris.svelte';
+import GameSelector from '../components/GameSelector.svelte';
 ---
 
 <!DOCTYPE html>
@@ -7,10 +7,10 @@ import Tetris from '../components/Tetris.svelte';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="Un jeu Tetris coloré et simple pour les enfants" />
+    <meta name="description" content="Jeux colorés et amusants pour enfants : Tetris et Block Blast" />
     <meta name="theme-color" content="#16213e" />
 
-    <title>Tetris Kids - Jeu Amusant</title>
+    <title>Jeux pour Enfants - Tetris & Block Blast</title>
 
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -54,6 +54,6 @@ import Tetris from '../components/Tetris.svelte';
     </script>
   </head>
   <body>
-    <Tetris client:load />
+    <GameSelector client:load />
   </body>
 </html>
