@@ -47,13 +47,172 @@ import GameSelector from '../components/GameSelector.svelte';
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then(registration => console.log('SW registered'))
+            .then(registration => {
+              console.log('SW registered');
+
+              // Vérifier les mises à jour toutes les 5 minutes
+              setInterval(() => {
+                registration.update();
+              }, 5 * 60 * 1000);
+            })
             .catch(err => console.log('SW registration failed'));
+
+          // Écouter les messages du service worker
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+              showUpdateNotification();
+            }
+          });
+
+          // Détecter quand un nouveau service worker est en attente
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
         });
+      }
+
+      function showUpdateNotification() {
+        const notification = document.getElementById('update-notification');
+        if (notification) {
+          notification.style.display = 'flex';
+        }
+      }
+
+      function reloadApp() {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        }
+        window.location.reload();
       }
     </script>
   </head>
   <body>
+    <div id="update-notification" style="display: none;">
+      <div class="update-content">
+        <div class="update-icon">🎉</div>
+        <div class="update-text">
+          <strong>Nouvelle version disponible !</strong>
+          <p>Une mise à jour est prête</p>
+        </div>
+        <button class="update-button" onclick="reloadApp()">
+          ✨ Recharger
+        </button>
+      </div>
+    </div>
+
     <GameSelector client:load />
+
+    <style>
+      #update-notification {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+        padding: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: slideDown 0.5s ease-out;
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translateY(-100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      .update-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        max-width: 600px;
+        width: 100%;
+      }
+
+      .update-icon {
+        font-size: 2.5rem;
+        animation: bounce 1s infinite;
+      }
+
+      @keyframes bounce {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .update-text {
+        flex: 1;
+        color: #16213e;
+      }
+
+      .update-text strong {
+        display: block;
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+      }
+
+      .update-text p {
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+      }
+
+      .update-button {
+        background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.2s;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+      }
+
+      .update-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      }
+
+      .update-button:active {
+        transform: scale(0.95);
+      }
+
+      @media (max-width: 600px) {
+        .update-content {
+          gap: 0.75rem;
+        }
+
+        .update-icon {
+          font-size: 2rem;
+        }
+
+        .update-text strong {
+          font-size: 1rem;
+        }
+
+        .update-text p {
+          font-size: 0.8rem;
+        }
+
+        .update-button {
+          padding: 0.5rem 1rem;
+          font-size: 1rem;
+        }
+      }
+    </style>
   </body>
 </html>
