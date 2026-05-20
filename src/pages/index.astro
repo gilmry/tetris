@@ -19,6 +19,17 @@ import GameSelector from '../components/GameSelector.svelte';
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Tetris Kids" />
 
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Jeux pour Enfants - Tetris & Block Blast" />
+    <meta property="og:description" content="Jeux colorés et amusants pour enfants : Tetris classique et Block Blast puzzle. PWA installable sur tablette et mobile." />
+    <meta property="og:site_name" content="Jeux pour Enfants" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Jeux pour Enfants - Tetris & Block Blast" />
+    <meta name="twitter:description" content="Jeux colorés pour enfants : Tetris et Block Blast" />
+
     <style is:global>
       * {
         margin: 0;
@@ -64,17 +75,21 @@ import GameSelector from '../components/GameSelector.svelte';
       (window as any).reloadApp = reloadApp;
 
       if ('serviceWorker' in navigator) {
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then(registration => {
-              console.log('SW registered');
+              if (isDev) console.log('SW registered');
 
               // Vérifier les mises à jour toutes les 5 minutes
               updateCheckInterval = setInterval(() => {
                 registration.update();
               }, 5 * 60 * 1000);
             })
-            .catch(err => console.log('SW registration failed'));
+            .catch(err => {
+              if (isDev) console.log('SW registration failed', err);
+            });
 
           // Écouter les messages du service worker
           navigator.serviceWorker.addEventListener('message', (event) => {

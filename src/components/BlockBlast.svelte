@@ -30,8 +30,8 @@
 
   let grid: number[][] = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
   let score = 0;
-  let availableBlocks: any[] = [];
-  let draggedBlock: any = null;
+  let availableBlocks: Block[] = [];
+  let draggedBlock: Block | null = null;
   let draggedBlockIndex: number = -1;
   let gameOver = false;
   let animatingCells: Set<string> = new Set();
@@ -48,19 +48,27 @@
   let selectedBlockIndex = -1;
   let keyboardCursorPos = { row: 0, col: 0 };
 
+  // Compteur pour IDs uniques robustes
+  let blockIdCounter = 0;
+
   interface Block {
     shape: number[][];
     color: string;
     id: number;
   }
 
+  // Copie efficace de shape 2D
+  function cloneShape(shape: number[][]): number[][] {
+    return shape.map(row => [...row]);
+  }
+
   function createRandomBlock(): Block {
     const shape = BLOCK_SHAPES[Math.floor(Math.random() * BLOCK_SHAPES.length)];
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
     return {
-      shape: JSON.parse(JSON.stringify(shape)),
+      shape: cloneShape(shape),
       color,
-      id: Date.now() + Math.random()
+      id: ++blockIdCounter
     };
   }
 
@@ -155,9 +163,9 @@
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
 
     return {
-      shape: JSON.parse(JSON.stringify(shape)),
+      shape: cloneShape(shape),
       color,
-      id: Date.now() + Math.random()
+      id: ++blockIdCounter
     };
   }
 
@@ -189,12 +197,12 @@
       newBlocks[0] = {
         shape: [[1]],
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        id: Date.now() + Math.random()
+        id: ++blockIdCounter
       };
       newBlocks[1] = {
         shape: [[1, 1]],
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        id: Date.now() + Math.random() + 0.1
+        id: ++blockIdCounter
       };
       attempts++;
     }

@@ -32,16 +32,16 @@
     [[0, 0, 1], [1, 1, 1]]  // J
   ];
 
-  let board: number[][] = Array(ROWS).fill(null).map(() => Array(COLS).fill(0));
-  let currentPiece: any = null;
-  let gameLoop: any = null;
-
   interface Piece {
     shape: number[][];
     x: number;
     y: number;
     color: string;
   }
+
+  let board: number[][] = Array(ROWS).fill(null).map(() => Array(COLS).fill(0));
+  let currentPiece: Piece | null = null;
+  let gameLoop: number | null = null;
 
   function createPiece(): Piece {
     const shapeIndex = Math.floor(Math.random() * SHAPES.length);
