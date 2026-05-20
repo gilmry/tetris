@@ -306,15 +306,21 @@
     width={COLS * BLOCK_SIZE}
     height={ROWS * BLOCK_SIZE}
     class="game-canvas"
+    role="img"
+    aria-label="Plateau de jeu Tetris avec {ROWS} lignes et {COLS} colonnes - Score actuel {score} points - Niveau {level}"
   />
 
   {#if !gameRunning}
-    <div class="game-over">
-      <h2>🎯 {score > 0 ? 'Partie Terminée!' : 'Prêt à Jouer?'}</h2>
+    <div class="game-over" role="dialog" aria-labelledby="game-status">
+      <h2 id="game-status">🎯 {score > 0 ? 'Partie Terminée!' : 'Prêt à Jouer?'}</h2>
       {#if score > 0}
         <p class="final-score">Score Final: {score}</p>
       {/if}
-      <button class="start-button" on:click={startGame}>
+      <button
+        class="start-button"
+        on:click={startGame}
+        aria-label={score > 0 ? 'Rejouer une partie' : 'Commencer une partie'}
+      >
         {score > 0 ? '🔄 Rejouer' : '▶️ Commencer'}
       </button>
     </div>

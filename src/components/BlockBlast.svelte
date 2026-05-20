@@ -44,6 +44,10 @@
   let gridAnalysisCache: { emptySpaces: number, almostFullLines: number[] } | null = null;
   let gridDirty = true;
 
+  // Support clavier pour accessibilité
+  let selectedBlockIndex = -1;
+  let keyboardCursorPos = { row: 0, col: 0 };
+
   interface Block {
     shape: number[][];
     color: string;
@@ -416,17 +420,84 @@
     }
   }
 
+  // Support clavier complet pour accessibilité
+  function handleKeyDown(e: KeyboardEvent) {
+    if (gameOver) return;
+
+    if (selectedBlockIndex === -1) {
+      // Tab pour sélectionner le premier bloc
+      if (e.key === 'Tab' && availableBlocks.length > 0) {
+        e.preventDefault();
+        selectedBlockIndex = 0;
+        draggedBlock = availableBlocks[0];
+        draggedBlockIndex = 0;
+        isDragging = true;
+        previewPosition = keyboardCursorPos;
+      }
+    } else {
+      // Bloc sélectionné: navigation avec flèches
+      switch(e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          keyboardCursorPos.row = Math.max(0, keyboardCursorPos.row - 1);
+          previewPosition = keyboardCursorPos;
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          keyboardCursorPos.row = Math.min(GRID_SIZE - 1, keyboardCursorPos.row + 1);
+          previewPosition = keyboardCursorPos;
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          keyboardCursorPos.col = Math.max(0, keyboardCursorPos.col - 1);
+          previewPosition = keyboardCursorPos;
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          keyboardCursorPos.col = Math.min(GRID_SIZE - 1, keyboardCursorPos.col + 1);
+          previewPosition = keyboardCursorPos;
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          handleDrop(keyboardCursorPos.row, keyboardCursorPos.col);
+          selectedBlockIndex = -1;
+          isDragging = false;
+          previewPosition = { row: -1, col: -1 };
+          break;
+        case 'Escape':
+          e.preventDefault();
+          selectedBlockIndex = -1;
+          draggedBlock = null;
+          draggedBlockIndex = -1;
+          isDragging = false;
+          previewPosition = { row: -1, col: -1 };
+          break;
+        case 'Tab':
+          // Changer de bloc avec Tab
+          e.preventDefault();
+          selectedBlockIndex = (selectedBlockIndex + 1) % availableBlocks.length;
+          draggedBlock = availableBlocks[selectedBlockIndex];
+          draggedBlockIndex = selectedBlockIndex;
+          previewPosition = keyboardCursorPos;
+          break;
+      }
+    }
+  }
+
   onMount(() => {
     initGame();
 
-    // Attacher touch handlers au niveau document pour éviter fuites mémoire
+    // Attacher touch et keyboard handlers au niveau document
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       // Cleanup handlers au démontage
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   });
 </script>
@@ -440,7 +511,13 @@
     </div>
   </div>
 
-  <div class="game-board" bind:this={gameBoardElement} on:dragover|preventDefault={handleDragMove}>
+  <div
+    class="game-board"
+    bind:this={gameBoardElement}
+    on:dragover|preventDefault={handleDragMove}
+    role="grid"
+    aria-label="Grille de jeu Block Blast 8 par 8"
+  >
     {#each grid as row, rowIndex}
       {#each row as cell, colIndex}
         {@const isPreview = isDragging && draggedBlock &&
@@ -463,18 +540,24 @@
           style="background-color: {cell ? COLORS[cell - 1] : '#2a2a4e'}"
           on:drop|preventDefault={() => handleDrop(rowIndex, colIndex)}
           on:dragover|preventDefault
+          role="gridcell"
+          aria-label="Cellule ligne {rowIndex + 1} colonne {colIndex + 1} {cell ? 'occupée' : 'vide'}"
         />
       {/each}
     {/each}
   </div>
 
-  <div class="available-blocks">
+  <div class="available-blocks" role="list" aria-label="Blocs disponibles">
     {#each availableBlocks as block, index (block.id)}
       <div
         class="block-container"
+        class:selected={selectedBlockIndex === index}
         draggable="true"
         on:dragstart={() => handleDragStart(block, index)}
         on:touchstart={(e) => handleTouchStart(e, block, index)}
+        role="button"
+        tabindex="0"
+        aria-label="Bloc {index + 1} de {availableBlocks.length} - Utilisez Tab pour sélectionner, flèches pour positionner, Entrée pour placer"
       >
         <div class="block-preview" style="grid-template-columns: repeat({block.shape[0].length}, 35px);">
           {#each block.shape as row}

@@ -13,42 +13,60 @@
   }
 </script>
 
+<div role="region" aria-live="polite" aria-label="Contenu du jeu">
 {#if selectedGame === 'menu'}
   <div class="menu-container">
     <h1 class="main-title">🎮 Jeux pour Enfants</h1>
     <p class="subtitle">Choisis ton jeu préféré !</p>
 
     <div class="game-cards">
-      <button class="game-card tetris-card" on:click={() => selectGame('tetris')}>
-        <div class="card-icon">🎯</div>
+      <button
+        class="game-card tetris-card"
+        on:click={() => selectGame('tetris')}
+        aria-label="Jouer à Tetris - Empile les blocs qui tombent et fais des lignes"
+      >
+        <div class="card-icon" aria-hidden="true">🎯</div>
         <h2>Tetris</h2>
         <p>Empile les blocs qui tombent et fais des lignes !</p>
-        <div class="play-button">▶️ Jouer</div>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
 
-      <button class="game-card blockblast-card" on:click={() => selectGame('blockblast')}>
-        <div class="card-icon">🧩</div>
+      <button
+        class="game-card blockblast-card"
+        on:click={() => selectGame('blockblast')}
+        aria-label="Jouer à Block Blast - Glisse les blocs sur la grille et fais des combos"
+      >
+        <div class="card-icon" aria-hidden="true">🧩</div>
         <h2>Block Blast</h2>
         <p>Glisse les blocs sur la grille et fais des combos !</p>
-        <div class="play-button">▶️ Jouer</div>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
   <div class="game-wrapper">
-    <button class="back-button" on:click={backToMenu}>
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
       ⬅️ Menu
     </button>
     <Tetris />
   </div>
 {:else if selectedGame === 'blockblast'}
   <div class="game-wrapper">
-    <button class="back-button" on:click={backToMenu}>
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
       ⬅️ Menu
     </button>
     <BlockBlast />
   </div>
 {/if}
+</div>
 
 <style>
   .menu-container {
