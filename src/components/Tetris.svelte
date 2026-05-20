@@ -126,24 +126,35 @@
     });
   }
 
+  // Optimisé: O(n) avec filter au lieu de O(n²) avec splice/unshift répétés
   function clearLines() {
-    let linesCleared = 0;
-    for (let row = ROWS - 1; row >= 0; row--) {
+    const linesToClear: number[] = [];
+
+    // Identifier toutes les lignes complètes
+    for (let row = 0; row < ROWS; row++) {
       if (board[row].every(cell => cell !== 0)) {
-        board.splice(row, 1);
-        board.unshift(Array(COLS).fill(0));
-        linesCleared++;
-        row++;
+        linesToClear.push(row);
       }
     }
-    if (linesCleared > 0) {
-      score += linesCleared * 100 * level;
-      if (score > level * 1000) {
-        level++;
-        gameSpeed = Math.max(100, gameSpeed - 50);
-        clearInterval(gameLoop);
-        startGameLoop();
-      }
+
+    if (linesToClear.length === 0) return;
+
+    // Supprimer lignes en batch avec filter (une seule passe)
+    board = board.filter((_, idx) => !linesToClear.includes(idx));
+
+    // Ajouter nouvelles lignes vides en haut
+    while (board.length < ROWS) {
+      board.unshift(Array(COLS).fill(0));
+    }
+
+    const linesCleared = linesToClear.length;
+    score += linesCleared * 100 * level;
+
+    if (score > level * 1000) {
+      level++;
+      gameSpeed = Math.max(100, gameSpeed - 50);
+      clearInterval(gameLoop);
+      startGameLoop();
     }
   }
 

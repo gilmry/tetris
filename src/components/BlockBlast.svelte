@@ -40,6 +40,10 @@
   let isDragging = false;
   let gameBoardElement: HTMLElement | null = null;
 
+  // Cache pour analyzeGrid() - optimisation performance
+  let gridAnalysisCache: { emptySpaces: number, almostFullLines: number[] } | null = null;
+  let gridDirty = true;
+
   interface Block {
     shape: number[][];
     color: string;
@@ -56,51 +60,51 @@
     };
   }
 
-  function analyzeGrid(): { emptySpaces: number, smallGaps: number[], almostFullLines: number[] } {
+  // Optimisé: une seule passe O(n²) au lieu de 3, suppression smallGaps inutilisé
+  function analyzeGrid(): { emptySpaces: number, almostFullLines: number[] } {
     let emptySpaces = 0;
-    const smallGaps: number[] = [];
     const almostFullLines: number[] = [];
+    const rowFilled = new Array(GRID_SIZE).fill(0);
+    const colFilled = new Array(GRID_SIZE).fill(0);
 
-    // Compter les espaces vides
-    for (let row = 0; row < GRID_SIZE; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        if (grid[row][col] === 0) emptySpaces++;
-      }
-    }
-
-    // Détecter les lignes presque complètes (6+ blocs sur 8)
-    for (let row = 0; row < GRID_SIZE; row++) {
-      const filled = grid[row].filter(cell => cell !== 0).length;
-      if (filled >= 6) {
-        almostFullLines.push(GRID_SIZE - filled);
-      }
-    }
-
-    // Détecter les colonnes presque complètes
-    for (let col = 0; col < GRID_SIZE; col++) {
-      let filled = 0;
-      for (let row = 0; row < GRID_SIZE; row++) {
-        if (grid[row][col] !== 0) filled++;
-      }
-      if (filled >= 6) {
-        almostFullLines.push(GRID_SIZE - filled);
-      }
-    }
-
-    // Détecter les petits trous (1x1, 2x1, 1x2)
+    // UNE SEULE PASSE O(n²) pour tout calculer
     for (let row = 0; row < GRID_SIZE; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         if (grid[row][col] === 0) {
-          smallGaps.push(1);
+          emptySpaces++;
+        } else {
+          rowFilled[row]++;
+          colFilled[col]++;
         }
       }
     }
 
-    return { emptySpaces, smallGaps, almostFullLines };
+    // Détection lignes/colonnes presque complètes O(n)
+    for (let row = 0; row < GRID_SIZE; row++) {
+      if (rowFilled[row] >= 6) {
+        almostFullLines.push(GRID_SIZE - rowFilled[row]);
+      }
+    }
+    for (let col = 0; col < GRID_SIZE; col++) {
+      if (colFilled[col] >= 6) {
+        almostFullLines.push(GRID_SIZE - colFilled[col]);
+      }
+    }
+
+    return { emptySpaces, almostFullLines };
+  }
+
+  // Cache wrapper pour éviter recalculs inutiles
+  function getCachedAnalysis() {
+    if (gridDirty || !gridAnalysisCache) {
+      gridAnalysisCache = analyzeGrid();
+      gridDirty = false;
+    }
+    return gridAnalysisCache;
   }
 
   function createSmartBlock(): Block {
-    const analysis = analyzeGrid();
+    const analysis = getCachedAnalysis();
     const totalCells = GRID_SIZE * GRID_SIZE;
     const fillRatio = (totalCells - analysis.emptySpaces) / totalCells;
 
@@ -208,6 +212,7 @@
 
     score = 0;
     gameOver = false;
+    gridDirty = true; // Invalider cache après init
     generateBlocks();
   }
 
@@ -244,6 +249,7 @@
     }
 
     grid = grid; // Trigger reactivity
+    gridDirty = true; // Invalider cache après modification
     checkAndClearLines();
   }
 
@@ -289,6 +295,7 @@
           grid[row][col] = 0;
         });
         grid = grid;
+        gridDirty = true; // Invalider cache après effacement
         animatingCells = new Set();
 
         // Score basé sur cellules uniques effacées (évite double comptage aux intersections)
