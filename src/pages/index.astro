@@ -6,7 +6,7 @@ import GameSelector from '../components/GameSelector.svelte';
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Jeux colorés et amusants pour enfants : Tetris et Block Blast" />
     <meta name="theme-color" content="#16213e" />
 
@@ -44,6 +44,25 @@ import GameSelector from '../components/GameSelector.svelte';
     </style>
 
     <script>
+      let updateCheckInterval: number | null = null;
+
+      function showUpdateNotification() {
+        const notification = document.getElementById('update-notification');
+        if (notification) {
+          notification.style.display = 'flex';
+        }
+      }
+
+      function reloadApp() {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        }
+        window.location.reload();
+      }
+
+      // Exposer globalement pour onclick dans HTML
+      (window as any).reloadApp = reloadApp;
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
@@ -51,7 +70,7 @@ import GameSelector from '../components/GameSelector.svelte';
               console.log('SW registered');
 
               // Vérifier les mises à jour toutes les 5 minutes
-              setInterval(() => {
+              updateCheckInterval = setInterval(() => {
                 registration.update();
               }, 5 * 60 * 1000);
             })
@@ -71,19 +90,12 @@ import GameSelector from '../components/GameSelector.svelte';
         });
       }
 
-      function showUpdateNotification() {
-        const notification = document.getElementById('update-notification');
-        if (notification) {
-          notification.style.display = 'flex';
+      // Cleanup interval au déchargement de la page
+      window.addEventListener('beforeunload', () => {
+        if (updateCheckInterval) {
+          clearInterval(updateCheckInterval);
         }
-      }
-
-      function reloadApp() {
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        }
-        window.location.reload();
-      }
+      });
     </script>
   </head>
   <body>

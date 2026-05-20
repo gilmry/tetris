@@ -6,7 +6,7 @@
   const BLOCK_SIZE = 30;
 
   let canvas: HTMLCanvasElement;
-  let ctx: CanvasRenderingRequest | null = null;
+  let ctx: CanvasRenderingContext2D | null = null;
   let gameRunning = false;
   let score = 0;
   let level = 1;
@@ -253,7 +253,17 @@
   }
 
   onMount(() => {
+    if (!canvas) {
+      console.error('Canvas element not found');
+      return;
+    }
+
     ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('Canvas context not available');
+      return;
+    }
+
     draw();
 
     window.addEventListener('keydown', handleKeyDown);

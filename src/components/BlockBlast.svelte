@@ -291,7 +291,8 @@
         grid = grid;
         animatingCells = new Set();
 
-        score += cleared * 100;
+        // Score basé sur cellules uniques effacées (évite double comptage aux intersections)
+        score += cellsToRemove.size * 10;
 
         // Vérifier à nouveau pour les combos
         setTimeout(() => checkAndClearLines(), 100);
@@ -410,6 +411,16 @@
 
   onMount(() => {
     initGame();
+
+    // Attacher touch handlers au niveau document pour éviter fuites mémoire
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      // Cleanup handlers au démontage
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
   });
 </script>
 
@@ -457,8 +468,6 @@
         draggable="true"
         on:dragstart={() => handleDragStart(block, index)}
         on:touchstart={(e) => handleTouchStart(e, block, index)}
-        on:touchmove={handleTouchMove}
-        on:touchend={handleTouchEnd}
       >
         <div class="block-preview" style="grid-template-columns: repeat({block.shape[0].length}, 35px);">
           {#each block.shape as row}
