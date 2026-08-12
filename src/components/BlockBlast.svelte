@@ -211,6 +211,8 @@
   }
 
   function initGame() {
+    console.log('initGame appelé - avant reset');
+
     grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
 
     // Ajouter quelques blocs aléatoires au début (mode facile)
@@ -238,6 +240,8 @@
     gridAnalysisCache = null;
 
     generateBlocks();
+
+    console.log('initGame terminé - gameOver:', gameOver, 'availableBlocks:', availableBlocks.length);
   }
 
   function canPlaceBlock(block: Block, gridRow: number, gridCol: number): boolean {
