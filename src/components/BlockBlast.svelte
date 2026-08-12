@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   const GRID_SIZE = 8;
   const BLOCK_SIZE = 45;
@@ -210,21 +210,10 @@
     availableBlocks = newBlocks;
   }
 
-  function initGame() {
-    grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
-
-    // Ajouter quelques blocs aléatoires au début (mode facile)
-    for (let i = 0; i < 8; i++) {
-      const row = Math.floor(Math.random() * GRID_SIZE);
-      const col = Math.floor(Math.random() * GRID_SIZE);
-      if (!grid[row][col]) {
-        grid[row][col] = Math.floor(Math.random() * COLORS.length) + 1;
-      }
-    }
-
-    score = 0;
+  async function initGame() {
+    // Réinitialiser l'état du jeu dans l'ordre correct
     gameOver = false;
-    gridDirty = true;
+    score = 0;
 
     // Réinitialiser tous les états de drag et sélection
     draggedBlock = null;
@@ -236,6 +225,24 @@
     selectedBlockIndex = -1;
     keyboardCursorPos = { row: 0, col: 0 };
 
+    // Attendre que Svelte mette à jour le DOM (fermer l'overlay)
+    await tick();
+
+    // Créer une nouvelle grille vide
+    grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+
+    // Ajouter quelques blocs aléatoires au début (mode facile)
+    for (let i = 0; i < 8; i++) {
+      const row = Math.floor(Math.random() * GRID_SIZE);
+      const col = Math.floor(Math.random() * GRID_SIZE);
+      if (!grid[row][col]) {
+        grid[row][col] = Math.floor(Math.random() * COLORS.length) + 1;
+      }
+    }
+
+    // Invalider le cache et générer de nouveaux blocs
+    gridDirty = true;
+    gridAnalysisCache = null;
     generateBlocks();
   }
 
