@@ -224,7 +224,18 @@
 
     score = 0;
     gameOver = false;
-    gridDirty = true; // Invalider cache après init
+    gridDirty = true;
+
+    // Réinitialiser tous les états de drag et sélection
+    draggedBlock = null;
+    draggedBlockIndex = -1;
+    isDragging = false;
+    animatingCells = new Set();
+    previewPosition = { row: -1, col: -1 };
+    dragPosition = { x: 0, y: 0 };
+    selectedBlockIndex = -1;
+    keyboardCursorPos = { row: 0, col: 0 };
+
     generateBlocks();
   }
 
