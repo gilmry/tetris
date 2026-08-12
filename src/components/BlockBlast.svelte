@@ -780,6 +780,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    pointer-events: none;
   }
 
   .game-over-content {
@@ -789,6 +790,7 @@
     text-align: center;
     border: 4px solid #FFD93D;
     box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+    pointer-events: auto;
   }
 
   .game-over-content h2 {
