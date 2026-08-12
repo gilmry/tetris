@@ -415,9 +415,9 @@
   }
 
   function handleTouchMove(event: TouchEvent) {
-    event.preventDefault();
-
     if (!draggedBlock) return;
+
+    event.preventDefault();
 
     const touch = event.touches[0];
     dragPosition = { x: touch.clientX, y: touch.clientY };
@@ -427,9 +427,9 @@
   }
 
   function handleTouchEnd(event: TouchEvent) {
-    event.preventDefault();
-
     if (!draggedBlock) return;
+
+    event.preventDefault();
 
     const touch = event.changedTouches[0];
     const gridPos = getGridCellFromPosition(touch.clientX, touch.clientY);
