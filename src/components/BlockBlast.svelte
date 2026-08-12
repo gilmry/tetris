@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount } from 'svelte';
 
   const GRID_SIZE = 8;
   const BLOCK_SIZE = 45;
@@ -210,25 +210,7 @@
     availableBlocks = newBlocks;
   }
 
-  async function initGame() {
-    // Réinitialiser l'état du jeu dans l'ordre correct
-    gameOver = false;
-    score = 0;
-
-    // Réinitialiser tous les états de drag et sélection
-    draggedBlock = null;
-    draggedBlockIndex = -1;
-    isDragging = false;
-    animatingCells = new Set();
-    previewPosition = { row: -1, col: -1 };
-    dragPosition = { x: 0, y: 0 };
-    selectedBlockIndex = -1;
-    keyboardCursorPos = { row: 0, col: 0 };
-
-    // Attendre que Svelte mette à jour le DOM (fermer l'overlay)
-    await tick();
-
-    // Créer une nouvelle grille vide
+  function initGame() {
     grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
 
     // Ajouter quelques blocs aléatoires au début (mode facile)
@@ -240,9 +222,21 @@
       }
     }
 
-    // Invalider le cache et générer de nouveaux blocs
+    score = 0;
+    gameOver = false;
+
+    draggedBlock = null;
+    draggedBlockIndex = -1;
+    isDragging = false;
+    animatingCells = new Set();
+    previewPosition = { row: -1, col: -1 };
+    dragPosition = { x: 0, y: 0 };
+    selectedBlockIndex = -1;
+    keyboardCursorPos = { row: 0, col: 0 };
+
     gridDirty = true;
     gridAnalysisCache = null;
+
     generateBlocks();
   }
 
