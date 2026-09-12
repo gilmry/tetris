@@ -509,22 +509,42 @@
 
   @media (max-width: 600px) {
     .game-container {
-      transform: scale(0.75);
-      transform-origin: top center;
+      gap: 0.5rem;
+      padding: 0.5rem;
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem 0;
     }
 
     .stats {
-      font-size: 1.2rem;
-      gap: 1rem;
+      font-size: 1rem;
+      gap: 0.75rem;
+    }
+
+    .stat {
+      padding: 0.3rem 1rem;
+    }
+
+    .game-canvas {
+      width: 240px;
+      height: 480px;
     }
 
     .control-btn {
-      min-height: 70px;
-      font-size: 1.5rem;
+      min-height: 60px;
+      font-size: 1.3rem;
+      max-width: 100px;
+    }
+
+    .controls {
+      margin-top: 0.5rem;
+      gap: 0.3rem;
+    }
+
+    .control-row {
+      gap: 0.3rem;
     }
   }
 </style>
