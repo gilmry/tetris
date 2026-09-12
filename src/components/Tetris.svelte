@@ -508,6 +508,11 @@
   }
 
   @media (max-width: 600px) {
+    .game-container {
+      transform: scale(0.75);
+      transform-origin: top center;
+    }
+
     h1 {
       font-size: 2rem;
     }
