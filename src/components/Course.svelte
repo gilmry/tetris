@@ -10,6 +10,8 @@
   const CAR_SIZE = 36;
   const CAR_Y = HEIGHT - CAR_SIZE - 10;
   const OBSTACLE_EMOJIS = ['🚙', '🚕', '🛻', '🚧', '🌵', '🪨'];
+  const START_SPEED = 1.3;
+  const MAX_SPEED = 3.8;
 
   interface Obstacle {
     lane: number;
@@ -25,7 +27,7 @@
   let lane = 1;
   let carX = laneCenter(1);
   let obstacles: Obstacle[] = [];
-  let speed = 2;
+  let speed = START_SPEED;
   let roadOffset = 0;
   let spawnTimer = 0;
   let frameId: number | null = null;
@@ -50,7 +52,7 @@
   function update() {
     distance += speed;
     score = Math.floor(distance / 10);
-    speed = Math.min(2 + distance / 3000, 6);
+    speed = Math.min(START_SPEED + distance / 6000, MAX_SPEED);
     roadOffset = (roadOffset + speed) % 40;
 
     carX += (laneCenter(lane) - carX) * 0.25;
@@ -58,7 +60,7 @@
     spawnTimer -= speed;
     if (spawnTimer <= 0) {
       spawnObstacle();
-      spawnTimer = 90 + Math.random() * 60;
+      spawnTimer = 120 + Math.random() * 80;
     }
 
     for (const o of obstacles) {
@@ -123,7 +125,7 @@
   function startGame() {
     score = 0;
     distance = 0;
-    speed = 2;
+    speed = START_SPEED;
     lane = 1;
     carX = laneCenter(1);
     obstacles = [];

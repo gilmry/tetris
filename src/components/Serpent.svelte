@@ -32,7 +32,9 @@
   let nextDir: Dir = 'up';
   let food: Point = { x: 7, y: 5 };
   let foodEmoji = FOODS[0];
-  let tickMs = 180;
+  const START_TICK_MS = 280;
+  const MIN_TICK_MS = 140;
+  let tickMs = START_TICK_MS;
   let timer: number | null = null;
   let swipeStart: Point | null = null;
 
@@ -72,8 +74,8 @@
     if (next.x === food.x && next.y === food.y) {
       score++;
       placeFood();
-      if (tickMs > 80) {
-        tickMs -= 5;
+      if (tickMs > MIN_TICK_MS) {
+        tickMs -= 4;
         restartTimer();
       }
     } else {
@@ -142,7 +144,7 @@
 
   function startGame() {
     score = 0;
-    tickMs = 180;
+    tickMs = START_TICK_MS;
     const cx = Math.floor(COLS / 2);
     const cy = Math.floor(ROWS / 2);
     snake = [{ x: cx, y: cy }, { x: cx, y: cy + 1 }, { x: cx, y: cy + 2 }];
