@@ -5,8 +5,11 @@
   import Invaders from './Invaders.svelte';
   import Course from './Course.svelte';
   import Pong from './Pong.svelte';
+  import Serpent from './Serpent.svelte';
+  import TapeTaupe from './TapeTaupe.svelte';
+  import Simon from './Simon.svelte';
 
-  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon';
 
   let selectedGame: Game = 'menu';
 
@@ -91,6 +94,39 @@
         <p>Renvoie la balle et bats l'ordinateur !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card serpent-card"
+        on:click={() => selectGame('serpent')}
+        aria-label="Jouer au Serpent - Mange les fruits sans te mordre la queue"
+      >
+        <div class="card-icon" aria-hidden="true">🐍</div>
+        <h2>Serpent</h2>
+        <p>Mange les fruits sans te mordre la queue !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card taupe-card"
+        on:click={() => selectGame('taupe')}
+        aria-label="Jouer à Tape-Taupe - Tape sur les taupes avant qu'elles se cachent"
+      >
+        <div class="card-icon" aria-hidden="true">🔨</div>
+        <h2>Tape-Taupe</h2>
+        <p>Tape sur les taupes avant qu'elles se cachent !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card simon-card"
+        on:click={() => selectGame('simon')}
+        aria-label="Jouer à Simon - Mémorise et répète la suite de couleurs"
+      >
+        <div class="card-icon" aria-hidden="true">🎵</div>
+        <h2>Simon</h2>
+        <p>Mémorise et répète la suite de couleurs !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -158,6 +194,39 @@
       ⬅️ Menu
     </button>
     <Pong />
+  </div>
+{:else if selectedGame === 'serpent'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Serpent />
+  </div>
+{:else if selectedGame === 'taupe'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <TapeTaupe />
+  </div>
+{:else if selectedGame === 'simon'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Simon />
   </div>
 {/if}
 </div>
@@ -241,6 +310,18 @@
 
   .pong-card {
     background: linear-gradient(135deg, #45B7D1 0%, #667eea 100%);
+  }
+
+  .serpent-card {
+    background: linear-gradient(135deg, #40916c 0%, #4ECDC4 100%);
+  }
+
+  .taupe-card {
+    background: linear-gradient(135deg, #8d6e63 0%, #FFA07A 100%);
+  }
+
+  .simon-card {
+    background: linear-gradient(135deg, #FF6B6B 0%, #BB8FCE 100%);
   }
 
   .card-icon {
