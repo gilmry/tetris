@@ -3,8 +3,10 @@
   import BlockBlast from './BlockBlast.svelte';
   import Memory from './Memory.svelte';
   import Invaders from './Invaders.svelte';
+  import Course from './Course.svelte';
+  import Pong from './Pong.svelte';
 
-  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong';
 
   let selectedGame: Game = 'menu';
 
@@ -67,6 +69,28 @@
         <p>Pilote la navette et tire sur les petits monstres !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card course-card"
+        on:click={() => selectGame('course')}
+        aria-label="Jouer à la Course - Conduis la voiture et évite les obstacles"
+      >
+        <div class="card-icon" aria-hidden="true">🚗</div>
+        <h2>Course</h2>
+        <p>Conduis la voiture et évite les obstacles !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card pong-card"
+        on:click={() => selectGame('pong')}
+        aria-label="Jouer au Pong - Renvoie la balle et bats l'ordinateur"
+      >
+        <div class="card-icon" aria-hidden="true">🏓</div>
+        <h2>Pong</h2>
+        <p>Renvoie la balle et bats l'ordinateur !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -112,6 +136,28 @@
       ⬅️ Menu
     </button>
     <Invaders />
+  </div>
+{:else if selectedGame === 'course'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Course />
+  </div>
+{:else if selectedGame === 'pong'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Pong />
   </div>
 {/if}
 </div>
@@ -187,6 +233,14 @@
 
   .invaders-card {
     background: linear-gradient(135deg, #F7DC6F 0%, #FFA07A 100%);
+  }
+
+  .course-card {
+    background: linear-gradient(135deg, #98D8C8 0%, #2d6a4f 100%);
+  }
+
+  .pong-card {
+    background: linear-gradient(135deg, #45B7D1 0%, #667eea 100%);
   }
 
   .card-icon {
