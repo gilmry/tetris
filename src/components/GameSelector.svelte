@@ -1,10 +1,11 @@
 <script lang="ts">
   import Tetris from './Tetris.svelte';
   import BlockBlast from './BlockBlast.svelte';
+  import Memory from './Memory.svelte';
 
-  let selectedGame: 'menu' | 'tetris' | 'blockblast' = 'menu';
+  let selectedGame: 'menu' | 'tetris' | 'blockblast' | 'memory' = 'menu';
 
-  function selectGame(game: 'tetris' | 'blockblast') {
+  function selectGame(game: 'tetris' | 'blockblast' | 'memory') {
     selectedGame = game;
   }
 
@@ -41,6 +42,17 @@
         <p>Glisse les blocs sur la grille et fais des combos !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card memory-card"
+        on:click={() => selectGame('memory')}
+        aria-label="Jouer au Mémo - Retourne les cartes et retrouve les paires"
+      >
+        <div class="card-icon" aria-hidden="true">🧠</div>
+        <h2>Mémo</h2>
+        <p>Retourne les cartes et retrouve les paires !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -64,6 +76,17 @@
       ⬅️ Menu
     </button>
     <BlockBlast />
+  </div>
+{:else if selectedGame === 'memory'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Memory />
   </div>
 {/if}
 </div>
@@ -131,6 +154,10 @@
 
   .blockblast-card {
     background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+  }
+
+  .memory-card {
+    background: linear-gradient(135deg, #BB8FCE 0%, #764ba2 100%);
   }
 
   .card-icon {
