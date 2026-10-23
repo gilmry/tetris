@@ -2,10 +2,13 @@
   import Tetris from './Tetris.svelte';
   import BlockBlast from './BlockBlast.svelte';
   import Memory from './Memory.svelte';
+  import Invaders from './Invaders.svelte';
 
-  let selectedGame: 'menu' | 'tetris' | 'blockblast' | 'memory' = 'menu';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders';
 
-  function selectGame(game: 'tetris' | 'blockblast' | 'memory') {
+  let selectedGame: Game = 'menu';
+
+  function selectGame(game: Game) {
     selectedGame = game;
   }
 
@@ -53,6 +56,17 @@
         <p>Retourne les cartes et retrouve les paires !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card invaders-card"
+        on:click={() => selectGame('invaders')}
+        aria-label="Jouer aux Envahisseurs - Pilote la navette et tire sur les petits monstres"
+      >
+        <div class="card-icon" aria-hidden="true">🚀</div>
+        <h2>Envahisseurs</h2>
+        <p>Pilote la navette et tire sur les petits monstres !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -87,6 +101,17 @@
       ⬅️ Menu
     </button>
     <Memory />
+  </div>
+{:else if selectedGame === 'invaders'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Invaders />
   </div>
 {/if}
 </div>
@@ -158,6 +183,10 @@
 
   .memory-card {
     background: linear-gradient(135deg, #BB8FCE 0%, #764ba2 100%);
+  }
+
+  .invaders-card {
+    background: linear-gradient(135deg, #F7DC6F 0%, #FFA07A 100%);
   }
 
   .card-icon {
