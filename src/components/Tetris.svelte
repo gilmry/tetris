@@ -328,24 +328,22 @@
 
   <div class="controls">
     <div class="control-row">
-      <button class="control-btn rotate" on:click={rotate}>
+      <button class="control-btn rotate" on:click={rotate} aria-label="Tourner la pièce">
         🔄<br><span>Tourner</span>
       </button>
+      <button class="control-btn drop" on:click={drop} aria-label="Faire descendre la pièce d'un coup">
+        ⏬<br><span>Descendre</span>
+      </button>
     </div>
     <div class="control-row">
-      <button class="control-btn" on:click={moveLeft}>
+      <button class="control-btn" on:click={moveLeft} aria-label="Déplacer à gauche">
         ⬅️<br><span>Gauche</span>
       </button>
-      <button class="control-btn" on:click={moveDown}>
+      <button class="control-btn" on:click={moveDown} aria-label="Déplacer vers le bas">
         ⬇️<br><span>Bas</span>
       </button>
-      <button class="control-btn" on:click={moveRight}>
+      <button class="control-btn" on:click={moveRight} aria-label="Déplacer à droite">
         ➡️<br><span>Droite</span>
-      </button>
-    </div>
-    <div class="control-row">
-      <button class="control-btn drop" on:click={drop}>
-        ⏬<br><span>Descendre</span>
       </button>
     </div>
   </div>
@@ -528,23 +526,29 @@
     }
 
     .game-canvas {
-      width: 240px;
-      height: 480px;
-    }
-
-    .control-btn {
-      min-height: 60px;
-      font-size: 1.3rem;
-      max-width: 100px;
+      width: min(94vw, calc((100vh - 312px) * 0.5));
+      width: min(94vw, calc((100dvh - 312px) * 0.5));
+      height: auto;
     }
 
     .controls {
-      margin-top: 0.5rem;
-      gap: 0.3rem;
+      margin-top: 0.25rem;
+      gap: 0.4rem;
+      max-width: 94vw;
     }
 
     .control-row {
-      gap: 0.3rem;
+      gap: 0.4rem;
+    }
+
+    .control-btn {
+      max-width: none;
+      min-height: 72px;
+      font-size: 1.7rem;
+    }
+
+    .control-btn span {
+      font-size: 0.9rem;
     }
   }
 </style>

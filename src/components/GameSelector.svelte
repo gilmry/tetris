@@ -422,5 +422,9 @@
       padding: 0.5rem 1rem;
       font-size: 1rem;
     }
+
+    .game-wrapper {
+      padding-top: 3.25rem;
+    }
   }
 </style>

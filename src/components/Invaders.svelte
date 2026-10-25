@@ -472,18 +472,24 @@
     }
 
     .game-canvas {
-      width: 270px;
-      height: 360px;
-    }
-
-    .control-btn {
-      min-height: 60px;
-      font-size: 1.3rem;
-      max-width: 100px;
+      width: min(94vw, calc((100vh - 260px) * 0.75));
+      width: min(94vw, calc((100dvh - 260px) * 0.75));
+      height: auto;
     }
 
     .controls {
-      gap: 0.3rem;
+      gap: 0.4rem;
+      max-width: 94vw;
+    }
+
+    .control-btn {
+      max-width: none;
+      min-height: 90px;
+      font-size: 2rem;
+    }
+
+    .control-btn span {
+      font-size: 0.95rem;
     }
   }
 </style>
