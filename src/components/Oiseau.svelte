@@ -123,7 +123,7 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.scale(-1, 1);
-    ctx.fillText('🐦', 0, 0);
+    ctx.fillText('🐤', 0, 0);
     ctx.restore();
 
     if (gameRunning) {
@@ -186,7 +186,7 @@
 
 <div class="game-container">
   <div class="game-info">
-    <h1>🐦 Oiseau</h1>
+    <h1>🐤 Oiseau</h1>
     <div class="stats">
       <div class="stat">
         <span class="label">Score:</span>
@@ -211,7 +211,7 @@
 
   {#if !gameRunning}
     <div class="game-over" role="dialog" aria-labelledby="oiseau-status">
-      <h2 id="oiseau-status">{hasPlayed ? '💥 Oups!' : '🐦 Prêt à Voler?'}</h2>
+      <h2 id="oiseau-status">{hasPlayed ? '💥 Oups!' : '🐤 Prêt à Voler?'}</h2>
       {#if hasPlayed}
         <p class="final-score">Score: {score}</p>
       {:else}

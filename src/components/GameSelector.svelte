@@ -158,7 +158,7 @@
         on:click={() => selectGame('oiseau')}
         aria-label="Jouer à Oiseau - Bats des ailes et passe entre les tuyaux"
       >
-        <div class="card-icon" aria-hidden="true">🐦</div>
+        <div class="card-icon" aria-hidden="true">🐤</div>
         <h2>Oiseau</h2>
         <p>Bats des ailes et passe entre les tuyaux !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
