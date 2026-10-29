@@ -8,8 +8,11 @@
   import Serpent from './Serpent.svelte';
   import TapeTaupe from './TapeTaupe.svelte';
   import Simon from './Simon.svelte';
+  import Plateforme from './Plateforme.svelte';
+  import CasseBriques from './CasseBriques.svelte';
+  import Oiseau from './Oiseau.svelte';
 
-  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau';
 
   let selectedGame: Game = 'menu';
 
@@ -127,6 +130,39 @@
         <p>Mémorise et répète la suite de couleurs !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card plateforme-card"
+        on:click={() => selectGame('plateforme')}
+        aria-label="Jouer à Plateforme - Cours, saute et ramasse les pièces"
+      >
+        <div class="card-icon" aria-hidden="true">🦸</div>
+        <h2>Plateforme</h2>
+        <p>Cours, saute et ramasse les pièces !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card briques-card"
+        on:click={() => selectGame('briques')}
+        aria-label="Jouer au Casse-Briques - Détruis toutes les briques avec la balle"
+      >
+        <div class="card-icon" aria-hidden="true">🧱</div>
+        <h2>Casse-Briques</h2>
+        <p>Détruis toutes les briques avec la balle !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card oiseau-card"
+        on:click={() => selectGame('oiseau')}
+        aria-label="Jouer à Oiseau - Bats des ailes et passe entre les tuyaux"
+      >
+        <div class="card-icon" aria-hidden="true">🐦</div>
+        <h2>Oiseau</h2>
+        <p>Bats des ailes et passe entre les tuyaux !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -228,6 +264,39 @@
     </button>
     <Simon />
   </div>
+{:else if selectedGame === 'plateforme'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Plateforme />
+  </div>
+{:else if selectedGame === 'briques'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <CasseBriques />
+  </div>
+{:else if selectedGame === 'oiseau'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Oiseau />
+  </div>
 {/if}
 </div>
 
@@ -322,6 +391,18 @@
 
   .simon-card {
     background: linear-gradient(135deg, #FF6B6B 0%, #BB8FCE 100%);
+  }
+
+  .plateforme-card {
+    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+  }
+
+  .briques-card {
+    background: linear-gradient(135deg, #F7DC6F 0%, #45B7D1 100%);
+  }
+
+  .oiseau-card {
+    background: linear-gradient(135deg, #5bc0eb 0%, #98D8C8 100%);
   }
 
   .card-icon {
