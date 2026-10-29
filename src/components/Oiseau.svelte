@@ -43,6 +43,10 @@
     birdVY += GRAVITY;
     if (birdVY > 8) birdVY = 8;
     birdY += birdVY;
+    if (birdY - BIRD_SIZE / 2 < 0) {
+      birdY = BIRD_SIZE / 2;
+      birdVY = 0;
+    }
 
     for (const p of pipes) p.x -= SCROLL_SPEED;
     if (pipes.length === 0 || pipes[pipes.length - 1].x < WIDTH - PIPE_SPACING) {
@@ -66,7 +70,7 @@
       }
     }
 
-    if (birdY + BIRD_SIZE / 2 >= HEIGHT - GROUND_H || birdY - BIRD_SIZE / 2 <= 0) {
+    if (birdY + BIRD_SIZE / 2 >= HEIGHT - GROUND_H) {
       endGame();
     }
   }
