@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
   import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
@@ -24,7 +25,7 @@
   let score = 0;
   let coins = 0;
   let lives = MAX_LIVES;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
   let hero = { x: 40, y: GROUND_Y - HERO, vx: 0, vy: 0, onGround: false, facing: 1, invincible: 0 };
@@ -292,18 +293,10 @@
     ctx.fillText('❤️'.repeat(Math.max(0, lives)), 8, 8);
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -325,8 +318,7 @@
     jumpQueued = false;
     ensureLevel();
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function jumpDown() {
@@ -389,7 +381,7 @@
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

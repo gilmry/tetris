@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
   import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
@@ -19,7 +20,7 @@
   let hasPlayed = false;
   let score = 0;
   let best = 0;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
   let px = WIDTH / 2;
@@ -167,19 +168,11 @@
     ctx.restore();
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
     if (score > best) best = score;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -196,8 +189,7 @@
     topY = HEIGHT - 30;
     ensureClouds();
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -220,7 +212,7 @@
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

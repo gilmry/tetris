@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
 
   const CELL = 20;
   const MAZE = [
@@ -53,7 +54,7 @@
   let pac: Mover = { x: 0, y: 0, dir: 'none', next: 'none', speed: 1.6 };
   let ghosts: Ghost[] = [];
   let frightened = 0;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
   let pauseUntil = 0;
   let swipeStart: { x: number; y: number } | null = null;
@@ -320,18 +321,10 @@
     ctx.fillText('❤️'.repeat(Math.max(0, lives)), WIDTH - 4, 2);
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -344,8 +337,7 @@
     resetPositions();
     pauseUntil = 30;
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function setDir(d: Dir) {
@@ -384,7 +376,7 @@
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

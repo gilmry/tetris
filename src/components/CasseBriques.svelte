@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
   import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
@@ -36,7 +37,7 @@
   let ballStuck = true;
   let bricks: Brick[] = [];
   let moveDir = 0;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
 
   function buildBricks() {
     bricks = [];
@@ -179,18 +180,10 @@
     }
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -203,8 +196,7 @@
     buildBricks();
     stickBall();
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   let held: Set<string> = new Set();
@@ -261,7 +253,7 @@
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

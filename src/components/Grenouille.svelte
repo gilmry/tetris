@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
 
   const CELL = 30;
   const COLS = 10;
@@ -23,7 +24,7 @@
   let score = 0;
   let level = 1;
   let lives = MAX_LIVES;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
   let frog = { x: 0, y: 0, row: START_ROW };
   let maxRow = START_ROW;
@@ -205,18 +206,10 @@
     ctx.fillText('❤️'.repeat(Math.max(0, lives)), 4, 6 * CELL + CELL / 2);
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -230,8 +223,7 @@
     resetFrog();
     pauseUntil = 0;
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -266,7 +258,7 @@
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

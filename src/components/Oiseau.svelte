@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
 
   const WIDTH = 300;
   const HEIGHT = 400;
@@ -24,7 +25,7 @@
   let birdY = HEIGHT / 2;
   let birdVY = 0;
   let pipes: Pipe[] = [];
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
   function spawnPipe(x: number) {
@@ -139,19 +140,11 @@
     }
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
     if (score > best) best = score;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -163,8 +156,7 @@
     pipes = [];
     spawnPipe(WIDTH + 120);
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -180,7 +172,7 @@
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

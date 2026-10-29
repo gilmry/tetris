@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
   import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
@@ -37,7 +38,7 @@
   let monsterSpeed = 0.25;
   let moveDir = 0;
   let lastShot = 0;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
   function spawnWave() {
@@ -141,17 +142,9 @@
     ctx.fillText('🚀', shipX, HEIGHT - SHIP_SIZE / 2 - 4);
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -165,8 +158,7 @@
     frame = 0;
     spawnWave();
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   let held: Set<string> = new Set();
@@ -240,7 +232,7 @@
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

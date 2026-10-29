@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
 
   const WIDTH = 300;
   const HEIGHT = 400;
@@ -30,7 +31,7 @@
   let speed = START_SPEED;
   let roadOffset = 0;
   let spawnTimer = 0;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
 
   function laneCenter(l: number): number {
     return ROAD_LEFT + LANE_WIDTH * l + LANE_WIDTH / 2;
@@ -109,17 +110,9 @@
     ctx.fillText('🚗', carX, CAR_Y);
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -133,8 +126,7 @@
     roadOffset = 0;
     spawnTimer = 60;
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function moveLeft() {
@@ -163,7 +155,7 @@
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
 
   const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
   const MAX_LIVES = 3;
@@ -13,7 +14,7 @@
   let score = 0;
   let best = 0;
   let lives = MAX_LIVES;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => {});
   let frame = 0;
   let nextId = 0;
   let spawnIn = 0;
@@ -83,18 +84,11 @@
     }, 250);
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
     if (score > best) best = score;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
   }
 
   function startGame() {
@@ -104,13 +98,12 @@
     spawnIn = 10;
     balloons = [];
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   onMount(() => {
     return () => {
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>

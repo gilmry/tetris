@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
   import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
@@ -23,7 +24,7 @@
   let ballVX = 0;
   let ballVY = 0;
   let moveDir = 0;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let winner: 'player' | 'computer' | null = null;
 
   const PLAYER_Y = HEIGHT - 30;
@@ -130,18 +131,10 @@
     ctx.fill();
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame(who: 'player' | 'computer') {
     winner = who;
     gameRunning = false;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -154,8 +147,7 @@
     moveDir = 0;
     resetBall(true);
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   let held: Set<string> = new Set();
@@ -209,7 +201,7 @@
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>
