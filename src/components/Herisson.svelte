@@ -6,13 +6,14 @@
   const WIDTH = 300;
   const HEIGHT = 400;
   const HERO = 30;
-  const HERO_X = 80;
+  const HERO_X = 64;
+  const HAZARD_GAP = 280;
   const GRAVITY = 0.45;
   const JUMP_VY = -12;
   const JUMP_CUT_VY = -6;
   const SPRING_VY = -15;
   const BASE_SPEED = 2.6;
-  const MAX_SPEED = 7;
+  const MAX_SPEED = 6;
   const ROLL_FRAMES = 40;
   const ROLL_COOLDOWN = 15;
   const MAX_LIVES = 3;
@@ -57,6 +58,8 @@
   let spikes: Spike[] = [];
   let particles: Particle[] = [];
   let genX = 0;
+  let lastHazardEnd = 0;
+  let freezeUntil = 0;
   let held: Set<string> = new Set();
 
   function rand(min: number, max: number): number {
@@ -87,13 +90,14 @@
     const startY = lastY();
     const roll = Math.random();
 
-    if (genX > 900 && roll < 0.14 + difficulty * 0.1) {
+    if (genX > 900 && roll < 0.14 + difficulty * 0.1 && genX - lastHazardEnd > HAZARD_GAP) {
       const gapW = rand(60, 90 + difficulty * 40);
       points.push({ x: genX, y: startY });
       points.push({ x: genX + 1, y: null });
       points.push({ x: genX + gapW - 1, y: null });
       genX += gapW;
       points.push({ x: genX, y: startY });
+      lastHazardEnd = genX;
       return;
     }
 
@@ -126,8 +130,11 @@
       }
     }
 
-    if (genX > 500 && Math.random() < 0.32 + difficulty * 0.2) {
-      const x = genX + rand(40, len - 40);
+    const hazardX = Math.max(genX + 60, lastHazardEnd + HAZARD_GAP);
+    const hazardFits = hazardX < genX + len - 60;
+
+    if (hazardFits && genX > 500 && Math.random() < 0.32 + difficulty * 0.2) {
+      const x = hazardX + rand(0, Math.min(40, genX + len - 60 - hazardX));
       const bee = Math.random() < 0.35;
       enemies.push({
         x, y: bee ? g(x) - 70 : g(x) - 14,
@@ -135,16 +142,15 @@
         minX: x - 30, maxX: x + 30, dir: 1, alive: true,
         wobble: Math.random() * Math.PI * 2
       });
-    }
-
-    if (genX > 700 && Math.random() < 0.25) {
-      const x = genX + rand(30, len - 60);
+      lastHazardEnd = x + 40;
+    } else if (hazardFits && genX > 700 && Math.random() < 0.25) {
+      const x = hazardX;
       for (let i = 0; i < 3; i++) spikes.push({ x: x + i * 14, y: g(x + i * 14) });
-    }
-
-    if (genX > 400 && Math.random() < 0.28) {
+      lastHazardEnd = x + 40;
+    } else if (genX > 400 && Math.random() < 0.28) {
       const x = genX + rand(30, len - 30);
       springs.push({ x, y: g(x), bounce: 0 });
+      lastHazardEnd = Math.max(lastHazardEnd, x);
     }
 
     genX += len;
@@ -180,11 +186,7 @@
       endGame();
       return;
     }
-    heroX = lastSafeX;
-    heroY = (groundAt(heroX) ?? GROUND_BASE) - HERO / 2;
-    vx = BASE_SPEED;
-    vy = 0;
-    invincible = 110;
+    respawnAt(lastSafeX);
   }
 
   function fall() {
@@ -193,11 +195,32 @@
       endGame();
       return;
     }
-    heroX = lastSafeX;
-    heroY = (groundAt(heroX) ?? GROUND_BASE) - HERO / 2 - 20;
+    let landing = lastSafeX;
+    for (let x = heroX; x < heroX + 500; x += 4) {
+      if (groundAt(x) !== null) {
+        landing = x + 36;
+        break;
+      }
+    }
+    respawnAt(landing);
+  }
+
+  function respawnAt(x: number) {
+    heroX = x;
+    heroY = (groundAt(x) ?? GROUND_BASE) - HERO / 2;
     vx = BASE_SPEED;
     vy = 0;
-    invincible = 110;
+    onGround = true;
+    rolling = 0;
+    invincible = 130;
+    freezeUntil = frame + 60;
+    jumpQueued = false;
+    enemies = enemies.filter(e => e.x < x - 40 || e.x > x + 280);
+    spikes = spikes.filter(s => s.x < x - 40 || s.x > x + 280);
+    lastHazardEnd = Math.max(lastHazardEnd, x + 280);
+    lastSafeX = x;
+    cameraX = heroX - HERO_X;
+    ensureLevel();
   }
 
   function update() {
@@ -206,11 +229,16 @@
     if (rollCooldown > 0) rollCooldown--;
     if (rolling > 0) rolling--;
 
+    if (frame < freezeUntil) {
+      jumpQueued = false;
+      return;
+    }
+
     const gHere = groundAt(heroX);
     const gAhead = groundAt(heroX + 12);
     const slope = gHere !== null && gAhead !== null ? (gAhead - gHere) / 12 : 0;
 
-    const speedGoal = BASE_SPEED + Math.min(distance / 2500, 2.2) + (rolling > 0 ? 1.4 : 0);
+    const speedGoal = BASE_SPEED + Math.min(distance / 4000, 1.8) + (rolling > 0 ? 1.2 : 0);
     if (onGround) {
       vx += slope * 0.05;
       vx += (speedGoal - vx) * 0.04;
@@ -279,7 +307,7 @@
     }
 
     for (const s of spikes) {
-      if (Math.abs(s.x - heroX) < 10 && heroY + HERO / 2 > s.y - 14 && heroY + HERO / 2 < s.y + 4) {
+      if (Math.abs(s.x - heroX) < 7 && heroY + HERO / 2 > s.y - 14 && heroY + HERO / 2 < s.y + 4) {
         if (invincible === 0) {
           const hadRings = rings > 0;
           const prevRoll = rolling;
@@ -457,11 +485,21 @@
     for (const s of spikes) {
       const sx = s.x - cameraX;
       if (sx < -10 || sx > WIDTH + 10) continue;
-      ctx.fillStyle = '#e0e0e0';
+      ctx.fillStyle = '#ecf0f1';
+      ctx.strokeStyle = '#2d3436';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(sx - 7, s.y + 1);
-      ctx.lineTo(sx, s.y - 16);
+      ctx.lineTo(sx, s.y - 18);
       ctx.lineTo(sx + 7, s.y + 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath();
+      ctx.moveTo(sx - 2.5, s.y - 11);
+      ctx.lineTo(sx, s.y - 18);
+      ctx.lineTo(sx + 2.5, s.y - 11);
       ctx.closePath();
       ctx.fill();
     }
@@ -543,6 +581,17 @@
     ctx.font = '15px serif';
     ctx.textAlign = 'right';
     ctx.fillText('❤️'.repeat(Math.max(0, lives)), WIDTH - 8, 8);
+
+    if (gameRunning && frame < freezeUntil) {
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillStyle = '#FFD93D';
+      ctx.strokeText('Attention ! 👀', WIDTH / 2, 120);
+      ctx.fillText('Attention ! 👀', WIDTH / 2, 120);
+    }
   }
 
   function slopeAt(x: number): number {
@@ -562,6 +611,8 @@
   function resetWorld() {
     points = [{ x: -200, y: GROUND_BASE }, { x: 300, y: GROUND_BASE }];
     genX = 300;
+    lastHazardEnd = 0;
+    freezeUntil = 0;
     ringList = [];
     enemies = [];
     springs = [];
