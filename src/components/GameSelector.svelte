@@ -11,8 +11,11 @@
   import Plateforme from './Plateforme.svelte';
   import CasseBriques from './CasseBriques.svelte';
   import Oiseau from './Oiseau.svelte';
+  import SauteNuages from './SauteNuages.svelte';
+  import Labyrinthe from './Labyrinthe.svelte';
+  import Puissance4 from './Puissance4.svelte';
 
-  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau' | 'nuages' | 'labyrinthe' | 'puissance4';
 
   let selectedGame: Game = 'menu';
 
@@ -25,7 +28,7 @@
   }
 </script>
 
-<div role="region" aria-live="polite" aria-label="Contenu du jeu">
+<div class="app" role="region" aria-live="polite" aria-label="Contenu du jeu">
 {#if selectedGame === 'menu'}
   <div class="menu-container">
     <h1 class="main-title">🎮 Jeux pour Enfants</h1>
@@ -163,6 +166,39 @@
         <p>Bats des ailes et passe entre les tuyaux !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card nuages-card"
+        on:click={() => selectGame('nuages')}
+        aria-label="Jouer à Saute-Nuages - Rebondis de nuage en nuage le plus haut possible"
+      >
+        <div class="card-icon" aria-hidden="true">☁️</div>
+        <h2>Saute-Nuages</h2>
+        <p>Rebondis de nuage en nuage le plus haut possible !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card labyrinthe-card"
+        on:click={() => selectGame('labyrinthe')}
+        aria-label="Jouer au Labyrinthe - Mange les points et évite les fantômes"
+      >
+        <div class="card-icon" aria-hidden="true">👻</div>
+        <h2>Labyrinthe</h2>
+        <p>Mange les points et évite les fantômes !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card puissance4-card"
+        on:click={() => selectGame('puissance4')}
+        aria-label="Jouer au Puissance 4 - Aligne 4 jetons avant l'ordinateur"
+      >
+        <div class="card-icon" aria-hidden="true">🔴</div>
+        <h2>Puissance 4</h2>
+        <p>Aligne 4 jetons avant l'ordinateur !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -297,10 +333,47 @@
     </button>
     <Oiseau />
   </div>
+{:else if selectedGame === 'nuages'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <SauteNuages />
+  </div>
+{:else if selectedGame === 'labyrinthe'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Labyrinthe />
+  </div>
+{:else if selectedGame === 'puissance4'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Puissance4 />
+  </div>
 {/if}
 </div>
 
 <style>
+  .app {
+    width: 100%;
+  }
+
   .menu-container {
     display: flex;
     flex-direction: column;
@@ -403,6 +476,18 @@
 
   .oiseau-card {
     background: linear-gradient(135deg, #5bc0eb 0%, #98D8C8 100%);
+  }
+
+  .nuages-card {
+    background: linear-gradient(135deg, #2b4c8c 0%, #5bc0eb 100%);
+  }
+
+  .labyrinthe-card {
+    background: linear-gradient(135deg, #2b3a9e 0%, #FFD93D 100%);
+  }
+
+  .puissance4-card {
+    background: linear-gradient(135deg, #e63946 0%, #FFD93D 100%);
   }
 
   .card-icon {
