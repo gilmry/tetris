@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createLoop } from '../lib/gameloop';
   import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
@@ -7,8 +8,9 @@
   const HERO = 30;
   const HERO_X = 80;
   const GRAVITY = 0.45;
-  const JUMP_VY = -9.5;
-  const SPRING_VY = -14;
+  const JUMP_VY = -12;
+  const JUMP_CUT_VY = -6;
+  const SPRING_VY = -15;
   const BASE_SPEED = 2.6;
   const MAX_SPEED = 7;
   const ROLL_FRAMES = 40;
@@ -30,7 +32,7 @@
   let score = 0;
   let rings = 0;
   let lives = MAX_LIVES;
-  let frameId: number | null = null;
+  const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
   let heroX = 0;
@@ -168,7 +170,7 @@
       }
       rings = 0;
       invincible = 100;
-      vx = BASE_SPEED;
+      vx = Math.max(BASE_SPEED, vx * 0.7);
       vy = -4;
       onGround = false;
       return;
@@ -210,10 +212,10 @@
 
     const speedGoal = BASE_SPEED + Math.min(distance / 2500, 2.2) + (rolling > 0 ? 1.4 : 0);
     if (onGround) {
-      vx += slope * 0.12;
-      vx += (speedGoal - vx) * 0.03;
+      vx += slope * 0.05;
+      vx += (speedGoal - vx) * 0.04;
     }
-    vx = Math.max(1.8, Math.min(MAX_SPEED, vx));
+    vx = Math.max(2.2, Math.min(MAX_SPEED, vx));
 
     if (jumpQueued && onGround) {
       vy = JUMP_VY;
@@ -221,7 +223,7 @@
       rolling = 0;
     }
     jumpQueued = false;
-    if (!jumpHeld && vy < -3.5 && !onGround) vy = -3.5;
+    if (!jumpHeld && vy < JUMP_CUT_VY && !onGround) vy = JUMP_CUT_VY;
 
     heroX += vx;
     distance += vx;
@@ -495,7 +497,7 @@
       if (rolling > 0 || !onGround) {
         ctx.save();
         ctx.translate(hx, heroY);
-        ctx.rotate(frame * 0.6);
+        ctx.rotate(frame * 0.35);
         ctx.fillStyle = '#1e6fd9';
         ctx.beginPath();
         ctx.arc(0, 0, HERO / 2 - 1, 0, Math.PI * 2);
@@ -550,18 +552,10 @@
     return (b - a) / 16;
   }
 
-  function loop() {
-    if (!gameRunning) return;
-    update();
-    draw();
-    if (gameRunning) frameId = requestAnimationFrame(loop);
-  }
-
   function endGame() {
     gameRunning = false;
     hasPlayed = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null;
+    ticker.stop();
     draw();
   }
 
@@ -597,8 +591,7 @@
     jumpQueued = false;
     resetWorld();
     gameRunning = true;
-    if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(loop);
+    ticker.start();
   }
 
   function startRoll() {
@@ -666,7 +659,7 @@
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (frameId !== null) cancelAnimationFrame(frameId);
+      ticker.stop();
     };
   });
 </script>
