@@ -18,8 +18,9 @@
   import Ballons from './Ballons.svelte';
   import Jeu2048 from './Jeu2048.svelte';
   import Morpion from './Morpion.svelte';
+  import Herisson from './Herisson.svelte';
 
-  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau' | 'nuages' | 'labyrinthe' | 'puissance4' | 'grenouille' | 'ballons' | 'j2048' | 'morpion';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau' | 'nuages' | 'labyrinthe' | 'puissance4' | 'grenouille' | 'ballons' | 'j2048' | 'morpion' | 'herisson';
 
   let selectedGame: Game = 'menu';
 
@@ -247,6 +248,17 @@
         <p>Aligne 3 croix avant l'ordinateur !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card herisson-card"
+        on:click={() => selectGame('herisson')}
+        aria-label="Jouer à Hérisson - Fonce sur les collines, saute et ramasse les anneaux"
+      >
+        <div class="card-icon" aria-hidden="true">🦔</div>
+        <h2>Hérisson</h2>
+        <p>Fonce sur les collines, saute et ramasse les anneaux !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -458,6 +470,17 @@
     </button>
     <Morpion />
   </div>
+{:else if selectedGame === 'herisson'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Herisson />
+  </div>
 {/if}
 </div>
 
@@ -596,6 +619,10 @@
 
   .morpion-card {
     background: linear-gradient(135deg, #45B7D1 0%, #FF6B6B 100%);
+  }
+
+  .herisson-card {
+    background: linear-gradient(135deg, #1e6fd9 0%, #2ecc71 100%);
   }
 
   .card-icon {
