@@ -193,6 +193,7 @@
   function drawEmoji(emoji: string, size: number, x: number, y: number, flip = false) {
     if (!ctx) return;
     ctx.save();
+    ctx.fillStyle = '#000';
     ctx.font = `${size}px serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -283,6 +284,7 @@
       drawEmoji('🦸', HERO + 2, hero.x - cameraX + HERO / 2, hero.y + HERO / 2, hero.facing < 0);
     }
 
+    ctx.fillStyle = '#000';
     ctx.font = '18px serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';

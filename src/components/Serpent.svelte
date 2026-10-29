@@ -104,6 +104,7 @@
     ctx.beginPath();
     ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL / 2 + 2, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#000';
     ctx.font = `${CELL + 2}px serif`;
     ctx.fillText(foodEmoji, food.x * CELL + CELL / 2, food.y * CELL + CELL / 2 + 1);
 

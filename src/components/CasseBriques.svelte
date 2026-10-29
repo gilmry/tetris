@@ -164,6 +164,7 @@
     ctx.arc(ballX, ballY, BALL_RADIUS, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.fillStyle = '#000';
     ctx.font = '16px serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';

@@ -121,6 +121,7 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    ctx.fillStyle = '#000';
     ctx.font = `${MONSTER_SIZE}px serif`;
     for (const m of monsters) {
       ctx.fillText(m.emoji, m.x, m.y);
@@ -133,6 +134,7 @@
       ctx.fill();
     }
 
+    ctx.fillStyle = '#000';
     ctx.font = `${SHIP_SIZE}px serif`;
     ctx.fillText('🚀', shipX, HEIGHT - SHIP_SIZE / 2 - 4);
   }

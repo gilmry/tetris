@@ -117,6 +117,7 @@
     }
 
     ctx.save();
+    ctx.fillStyle = '#000';
     ctx.translate(BIRD_X, birdY);
     ctx.rotate(Math.max(-0.5, Math.min(0.9, birdVY * 0.08)));
     ctx.font = `${BIRD_SIZE}px serif`;

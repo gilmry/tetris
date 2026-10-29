@@ -97,6 +97,7 @@
       }
     }
 
+    ctx.fillStyle = '#000';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = `${CAR_SIZE}px serif`;
