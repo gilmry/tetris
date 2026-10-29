@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
   const HEIGHT = 400;
@@ -157,12 +158,28 @@
     frameId = requestAnimationFrame(loop);
   }
 
-  function startMove(dir: number) {
-    moveDir = dir;
+  let held: Set<string> = new Set();
+
+  function applyHeld() {
+    moveDir = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
   }
 
-  function stopMove() {
-    moveDir = 0;
+  function onPad({ pressed }: PadState) {
+    held = pressed;
+    applyHeld();
+  }
+
+  function mouseDown(action: string, e: PointerEvent) {
+    if (e.pointerType === 'touch') return;
+    held = new Set(held).add(action);
+    applyHeld();
+  }
+
+  function mouseUp(action: string, e: PointerEvent) {
+    if (e.pointerType === 'touch' || !held.has(action)) return;
+    held = new Set(held);
+    held.delete(action);
+    applyHeld();
   }
 
   function handleCanvasPointer(event: PointerEvent) {
@@ -249,23 +266,27 @@
     </div>
   {/if}
 
-  <div class="controls">
+  <div class="controls" use:touchpad={onPad}>
     <button
       class="control-btn"
-      on:pointerdown={() => startMove(-1)}
-      on:pointerup={stopMove}
-      on:pointerleave={stopMove}
-      on:pointercancel={stopMove}
+      class:pressed={held.has('left')}
+      data-action="left"
+      on:pointerdown={(e) => mouseDown('left', e)}
+      on:pointerup={(e) => mouseUp('left', e)}
+      on:pointerleave={(e) => mouseUp('left', e)}
+      on:pointercancel={(e) => mouseUp('left', e)}
       aria-label="Déplacer la raquette à gauche"
     >
       ⬅️<br><span>Gauche</span>
     </button>
     <button
       class="control-btn"
-      on:pointerdown={() => startMove(1)}
-      on:pointerup={stopMove}
-      on:pointerleave={stopMove}
-      on:pointercancel={stopMove}
+      class:pressed={held.has('right')}
+      data-action="right"
+      on:pointerdown={(e) => mouseDown('right', e)}
+      on:pointerup={(e) => mouseUp('right', e)}
+      on:pointerleave={(e) => mouseUp('right', e)}
+      on:pointercancel={(e) => mouseUp('right', e)}
       aria-label="Déplacer la raquette à droite"
     >
       ➡️<br><span>Droite</span>
@@ -398,6 +419,8 @@
     gap: 0.75rem;
     width: 100%;
     max-width: 400px;
+    touch-action: none;
+    -webkit-touch-callout: none;
   }
 
   .control-btn {
@@ -429,8 +452,10 @@
     margin-top: 0.2rem;
   }
 
-  .control-btn:active {
+  .control-btn:active,
+  .control-btn.pressed {
     transform: scale(0.95);
+    filter: brightness(1.15);
   }
 
   @media (max-width: 600px) {

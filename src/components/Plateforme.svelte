@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
   const HEIGHT = 400;
@@ -338,6 +339,33 @@
     jumpHeld = false;
   }
 
+  let held: Set<string> = new Set();
+
+  function applyHeld() {
+    moveDir = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
+    jumpHeld = held.has('jump');
+  }
+
+  function onPad({ pressed, justPressed }: PadState) {
+    held = pressed;
+    applyHeld();
+    if (justPressed.includes('jump') && gameRunning) jumpQueued = true;
+  }
+
+  function mouseDown(action: string, e: PointerEvent) {
+    if (e.pointerType === 'touch') return;
+    held = new Set(held).add(action);
+    applyHeld();
+    if (action === 'jump' && gameRunning) jumpQueued = true;
+  }
+
+  function mouseUp(action: string, e: PointerEvent) {
+    if (e.pointerType === 'touch' || !held.has(action)) return;
+    held = new Set(held);
+    held.delete(action);
+    applyHeld();
+  }
+
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowLeft') moveDir = -1;
     else if (e.key === 'ArrowRight') moveDir = 1;
@@ -411,33 +439,39 @@
     </div>
   {/if}
 
-  <div class="controls">
+  <div class="controls" use:touchpad={onPad}>
     <button
       class="control-btn"
-      on:pointerdown={() => { moveDir = -1; }}
-      on:pointerup={() => { if (moveDir === -1) moveDir = 0; }}
-      on:pointerleave={() => { if (moveDir === -1) moveDir = 0; }}
-      on:pointercancel={() => { if (moveDir === -1) moveDir = 0; }}
+      class:pressed={held.has('left')}
+      data-action="left"
+      on:pointerdown={(e) => mouseDown('left', e)}
+      on:pointerup={(e) => mouseUp('left', e)}
+      on:pointerleave={(e) => mouseUp('left', e)}
+      on:pointercancel={(e) => mouseUp('left', e)}
       aria-label="Courir à gauche"
     >
       ⬅️<br><span>Gauche</span>
     </button>
     <button
       class="control-btn jump"
-      on:pointerdown={jumpDown}
-      on:pointerup={jumpUp}
-      on:pointerleave={jumpUp}
-      on:pointercancel={jumpUp}
+      class:pressed={held.has('jump')}
+      data-action="jump"
+      on:pointerdown={(e) => mouseDown('jump', e)}
+      on:pointerup={(e) => mouseUp('jump', e)}
+      on:pointerleave={(e) => mouseUp('jump', e)}
+      on:pointercancel={(e) => mouseUp('jump', e)}
       aria-label="Sauter"
     >
       ⬆️<br><span>Sauter</span>
     </button>
     <button
       class="control-btn"
-      on:pointerdown={() => { moveDir = 1; }}
-      on:pointerup={() => { if (moveDir === 1) moveDir = 0; }}
-      on:pointerleave={() => { if (moveDir === 1) moveDir = 0; }}
-      on:pointercancel={() => { if (moveDir === 1) moveDir = 0; }}
+      class:pressed={held.has('right')}
+      data-action="right"
+      on:pointerdown={(e) => mouseDown('right', e)}
+      on:pointerup={(e) => mouseUp('right', e)}
+      on:pointerleave={(e) => mouseUp('right', e)}
+      on:pointercancel={(e) => mouseUp('right', e)}
       aria-label="Courir à droite"
     >
       ➡️<br><span>Droite</span>
@@ -563,6 +597,8 @@
     gap: 0.5rem;
     width: 100%;
     max-width: 400px;
+    touch-action: none;
+    -webkit-touch-callout: none;
   }
 
   .control-btn {
@@ -594,8 +630,10 @@
     margin-top: 0.2rem;
   }
 
-  .control-btn:active {
+  .control-btn:active,
+  .control-btn.pressed {
     transform: scale(0.95);
+    filter: brightness(1.15);
   }
 
   .control-btn.jump {

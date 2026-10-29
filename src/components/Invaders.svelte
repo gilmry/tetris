@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { touchpad, type PadState } from '../lib/touchpad';
 
   const WIDTH = 300;
   const HEIGHT = 400;
@@ -67,6 +68,7 @@
 
   function update() {
     frame++;
+    if (held.has('fire')) shoot();
 
     shipX = Math.max(SHIP_SIZE / 2, Math.min(WIDTH - SHIP_SIZE / 2, shipX + moveDir * SHIP_SPEED));
 
@@ -167,12 +169,30 @@
     frameId = requestAnimationFrame(loop);
   }
 
-  function startMove(dir: number) {
-    moveDir = dir;
+  let held: Set<string> = new Set();
+
+  function applyHeld() {
+    moveDir = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
   }
 
-  function stopMove() {
-    moveDir = 0;
+  function onPad({ pressed, justPressed }: PadState) {
+    held = pressed;
+    applyHeld();
+    if (justPressed.includes('fire')) shoot();
+  }
+
+  function mouseDown(action: string, e: PointerEvent) {
+    if (e.pointerType === 'touch') return;
+    held = new Set(held).add(action);
+    applyHeld();
+    if (action === 'fire') shoot();
+  }
+
+  function mouseUp(action: string, e: PointerEvent) {
+    if (e.pointerType === 'touch' || !held.has(action)) return;
+    held = new Set(held);
+    held.delete(action);
+    applyHeld();
   }
 
   function canvasX(clientX: number): number {
@@ -267,30 +287,39 @@
     </div>
   {/if}
 
-  <div class="controls">
+  <div class="controls" use:touchpad={onPad}>
     <button
       class="control-btn"
-      on:pointerdown={() => startMove(-1)}
-      on:pointerup={stopMove}
-      on:pointerleave={stopMove}
-      on:pointercancel={stopMove}
+      class:pressed={held.has('left')}
+      data-action="left"
+      on:pointerdown={(e) => mouseDown('left', e)}
+      on:pointerup={(e) => mouseUp('left', e)}
+      on:pointerleave={(e) => mouseUp('left', e)}
+      on:pointercancel={(e) => mouseUp('left', e)}
       aria-label="Déplacer la navette à gauche"
     >
       ⬅️<br><span>Gauche</span>
     </button>
     <button
       class="control-btn fire"
-      on:click={shoot}
+      class:pressed={held.has('fire')}
+      data-action="fire"
+      on:pointerdown={(e) => mouseDown('fire', e)}
+      on:pointerup={(e) => mouseUp('fire', e)}
+      on:pointerleave={(e) => mouseUp('fire', e)}
+      on:pointercancel={(e) => mouseUp('fire', e)}
       aria-label="Tirer"
     >
       💥<br><span>Tirer</span>
     </button>
     <button
       class="control-btn"
-      on:pointerdown={() => startMove(1)}
-      on:pointerup={stopMove}
-      on:pointerleave={stopMove}
-      on:pointercancel={stopMove}
+      class:pressed={held.has('right')}
+      data-action="right"
+      on:pointerdown={(e) => mouseDown('right', e)}
+      on:pointerup={(e) => mouseUp('right', e)}
+      on:pointerleave={(e) => mouseUp('right', e)}
+      on:pointercancel={(e) => mouseUp('right', e)}
       aria-label="Déplacer la navette à droite"
     >
       ➡️<br><span>Droite</span>
@@ -413,6 +442,8 @@
     gap: 0.5rem;
     width: 100%;
     max-width: 400px;
+    touch-action: none;
+    -webkit-touch-callout: none;
   }
 
   .control-btn {
@@ -444,9 +475,11 @@
     margin-top: 0.2rem;
   }
 
-  .control-btn:active {
+  .control-btn:active,
+  .control-btn.pressed {
     transform: scale(0.95);
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    filter: brightness(1.15);
   }
 
   .control-btn.fire {
