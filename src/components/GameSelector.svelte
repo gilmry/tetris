@@ -14,8 +14,12 @@
   import SauteNuages from './SauteNuages.svelte';
   import Labyrinthe from './Labyrinthe.svelte';
   import Puissance4 from './Puissance4.svelte';
+  import Grenouille from './Grenouille.svelte';
+  import Ballons from './Ballons.svelte';
+  import Jeu2048 from './Jeu2048.svelte';
+  import Morpion from './Morpion.svelte';
 
-  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau' | 'nuages' | 'labyrinthe' | 'puissance4';
+  type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau' | 'nuages' | 'labyrinthe' | 'puissance4' | 'grenouille' | 'ballons' | 'j2048' | 'morpion';
 
   let selectedGame: Game = 'menu';
 
@@ -199,6 +203,50 @@
         <p>Aligne 4 jetons avant l'ordinateur !</p>
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
+
+      <button
+        class="game-card grenouille-card"
+        on:click={() => selectGame('grenouille')}
+        aria-label="Jouer à Grenouille - Traverse la route et la rivière jusqu'aux nénuphars"
+      >
+        <div class="card-icon" aria-hidden="true">🐸</div>
+        <h2>Grenouille</h2>
+        <p>Traverse la route et la rivière jusqu'aux nénuphars !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card ballons-card"
+        on:click={() => selectGame('ballons')}
+        aria-label="Jouer à Ballons - Éclate les ballons avant qu'ils s'envolent"
+      >
+        <div class="card-icon" aria-hidden="true">🎈</div>
+        <h2>Ballons</h2>
+        <p>Éclate les ballons avant qu'ils s'envolent !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card j2048-card"
+        on:click={() => selectGame('j2048')}
+        aria-label="Jouer à 2048 - Glisse les tuiles et additionne les nombres"
+      >
+        <div class="card-icon" aria-hidden="true">🔢</div>
+        <h2>2048</h2>
+        <p>Glisse les tuiles et additionne les nombres !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
+
+      <button
+        class="game-card morpion-card"
+        on:click={() => selectGame('morpion')}
+        aria-label="Jouer au Morpion - Aligne 3 croix avant l'ordinateur"
+      >
+        <div class="card-icon" aria-hidden="true">⭕</div>
+        <h2>Morpion</h2>
+        <p>Aligne 3 croix avant l'ordinateur !</p>
+        <div class="play-button" aria-hidden="true">▶️ Jouer</div>
+      </button>
     </div>
   </div>
 {:else if selectedGame === 'tetris'}
@@ -366,6 +414,50 @@
     </button>
     <Puissance4 />
   </div>
+{:else if selectedGame === 'grenouille'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Grenouille />
+  </div>
+{:else if selectedGame === 'ballons'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Ballons />
+  </div>
+{:else if selectedGame === 'j2048'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Jeu2048 />
+  </div>
+{:else if selectedGame === 'morpion'}
+  <div class="game-wrapper">
+    <button
+      class="back-button"
+      on:click={backToMenu}
+      aria-label="Retour au menu principal"
+    >
+      ⬅️ Menu
+    </button>
+    <Morpion />
+  </div>
 {/if}
 </div>
 
@@ -488,6 +580,22 @@
 
   .puissance4-card {
     background: linear-gradient(135deg, #e63946 0%, #FFD93D 100%);
+  }
+
+  .grenouille-card {
+    background: linear-gradient(135deg, #1e6fb5 0%, #3cb371 100%);
+  }
+
+  .ballons-card {
+    background: linear-gradient(135deg, #FF6B6B 0%, #5bc0eb 100%);
+  }
+
+  .j2048-card {
+    background: linear-gradient(135deg, #f2b179 0%, #edc22e 100%);
+  }
+
+  .morpion-card {
+    background: linear-gradient(135deg, #45B7D1 0%, #FF6B6B 100%);
   }
 
   .card-icon {

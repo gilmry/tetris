@@ -284,6 +284,8 @@
 
   .pad:disabled {
     cursor: default;
+    color: #000;
+    opacity: 1;
   }
 
   .pad.active {

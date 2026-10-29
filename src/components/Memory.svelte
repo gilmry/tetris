@@ -205,6 +205,8 @@
 
   .card:disabled {
     cursor: default;
+    color: #000;
+    opacity: 1;
   }
 
   .card-inner {
