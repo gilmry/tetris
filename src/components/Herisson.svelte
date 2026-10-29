@@ -10,8 +10,8 @@
   const HAZARD_GAP = 280;
   const GRAVITY = 0.45;
   const JUMP_VY = -12;
-  const JUMP_CUT_VY = -6;
   const SPRING_VY = -15;
+  const AIR_BOOST_MAX = 9;
   const BASE_SPEED = 2.6;
   const MAX_SPEED = 6;
   const ROLL_FRAMES = 40;
@@ -60,6 +60,7 @@
   let genX = 0;
   let lastHazardEnd = 0;
   let freezeUntil = 0;
+  let airTargetVx = 0;
   let held: Set<string> = new Set();
 
   function rand(min: number, max: number): number {
@@ -205,7 +206,47 @@
     respawnAt(landing);
   }
 
+  // Looks ahead for a gap or spike group the current jump would land in and
+  // returns the horizontal speed needed in the air to clear it.
+  function jumpAssistSpeed(): number {
+    const airFrames = (2 * -JUMP_VY) / GRAVITY;
+    const reach = heroX + vx * airFrames;
+    const lookahead = heroX + Math.max(reach - heroX, 0) + 160;
+
+    let hazardStart = Infinity;
+    let hazardEnd = -Infinity;
+
+    let inGap = false;
+    for (let x = heroX; x < lookahead; x += 4) {
+      const g = groundAt(x);
+      if (g === null) {
+        if (!inGap) {
+          inGap = true;
+          if (x < hazardStart) hazardStart = x;
+        }
+        hazardEnd = Math.max(hazardEnd, x + 4);
+      } else if (inGap) {
+        break;
+      }
+    }
+
+    for (const s of spikes) {
+      if (s.x > heroX && s.x < lookahead && s.x < hazardStart + 60) {
+        hazardStart = Math.min(hazardStart, s.x - 10);
+        hazardEnd = Math.max(hazardEnd, s.x + 12);
+      }
+    }
+
+    if (hazardStart === Infinity) return 0;
+    const landsBefore = reach < hazardStart - HERO / 2 - 8;
+    const clears = reach > hazardEnd + HERO / 2 + 8;
+    if (landsBefore || clears) return 0;
+    const needed = (hazardEnd + HERO / 2 + 24 - heroX) / airFrames;
+    return Math.min(AIR_BOOST_MAX, needed);
+  }
+
   function respawnAt(x: number) {
+    airTargetVx = 0;
     heroX = x;
     heroY = (groundAt(x) ?? GROUND_BASE) - HERO / 2;
     vx = BASE_SPEED;
@@ -243,15 +284,16 @@
       vx += slope * 0.05;
       vx += (speedGoal - vx) * 0.04;
     }
-    vx = Math.max(2.2, Math.min(MAX_SPEED, vx));
+    vx = Math.max(2.2, Math.min(onGround ? MAX_SPEED : AIR_BOOST_MAX, vx));
 
     if (jumpQueued && onGround) {
       vy = JUMP_VY;
       onGround = false;
       rolling = 0;
+      airTargetVx = jumpAssistSpeed();
     }
     jumpQueued = false;
-    if (!jumpHeld && vy < JUMP_CUT_VY && !onGround) vy = JUMP_CUT_VY;
+    if (!onGround && airTargetVx > vx) vx += (airTargetVx - vx) * 0.25;
 
     heroX += vx;
     distance += vx;
@@ -279,6 +321,7 @@
         heroY = groundY - HERO / 2;
         vy = 0;
         onGround = true;
+        airTargetVx = 0;
       }
     }
     if (onGround && groundY !== null) lastSafeX = heroX;
@@ -613,6 +656,7 @@
     genX = 300;
     lastHazardEnd = 0;
     freezeUntil = 0;
+    airTargetVx = 0;
     ringList = [];
     enemies = [];
     springs = [];
