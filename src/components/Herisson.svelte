@@ -91,17 +91,6 @@
     const startY = lastY();
     const roll = Math.random();
 
-    if (genX > 900 && roll < 0.14 + difficulty * 0.1 && genX - lastHazardEnd > HAZARD_GAP) {
-      const gapW = rand(60, 90 + difficulty * 40);
-      points.push({ x: genX, y: startY });
-      points.push({ x: genX + 1, y: null });
-      points.push({ x: genX + gapW - 1, y: null });
-      genX += gapW;
-      points.push({ x: genX, y: startY });
-      lastHazardEnd = genX;
-      return;
-    }
-
     const len = rand(140, 260);
     const target = roll < 0.6
       ? Math.max(230, Math.min(345, startY + rand(-70, 70)))
@@ -206,7 +195,7 @@
     respawnAt(landing);
   }
 
-  // Looks ahead for a gap or spike group the current jump would land in and
+  // Looks ahead for a spike group the current jump would land on and
   // returns the horizontal speed needed in the air to clear it.
   function jumpAssistSpeed(): number {
     const airFrames = (2 * -JUMP_VY) / GRAVITY;
@@ -215,20 +204,6 @@
 
     let hazardStart = Infinity;
     let hazardEnd = -Infinity;
-
-    let inGap = false;
-    for (let x = heroX; x < lookahead; x += 4) {
-      const g = groundAt(x);
-      if (g === null) {
-        if (!inGap) {
-          inGap = true;
-          if (x < hazardStart) hazardStart = x;
-        }
-        hazardEnd = Math.max(hazardEnd, x + 4);
-      } else if (inGap) {
-        break;
-      }
-    }
 
     for (const s of spikes) {
       if (s.x > heroX && s.x < lookahead && s.x < hazardStart + 60) {
