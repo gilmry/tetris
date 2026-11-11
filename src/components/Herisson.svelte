@@ -19,7 +19,7 @@
   const MAX_LIVES = 3;
   const GROUND_BASE = 300;
 
-  interface Point { x: number; y: number | null }
+  interface Point { x: number; y: number }
   interface Ring { x: number; y: number; taken: boolean }
   interface Enemy { x: number; y: number; kind: 'crab' | 'bee'; minX: number; maxX: number; dir: number; alive: boolean; wobble: number }
   interface Spring { x: number; y: number; bounce: number }
@@ -67,23 +67,25 @@
     return min + Math.random() * (max - min);
   }
 
-  function groundAt(x: number): number | null {
+  // The terrain is continuous: there is always ground under every x.
+  function groundAt(x: number): number {
+    if (points.length === 0) return GROUND_BASE;
+    if (x <= points[0].x) return points[0].y;
     for (let i = 0; i < points.length - 1; i++) {
       const a = points[i];
       const b = points[i + 1];
       if (x >= a.x && x <= b.x) {
-        if (a.y === null || b.y === null) return null;
+        if (b.x === a.x) return b.y;
         const t = (x - a.x) / (b.x - a.x);
         const s = (1 - Math.cos(t * Math.PI)) / 2;
         return a.y + (b.y - a.y) * s;
       }
     }
-    return null;
+    return points[points.length - 1].y;
   }
 
   function lastY(): number {
-    for (let i = points.length - 1; i >= 0; i--) if (points[i].y !== null) return points[i].y as number;
-    return GROUND_BASE;
+    return points.length ? points[points.length - 1].y : GROUND_BASE;
   }
 
   function generateChunk() {
@@ -101,7 +103,7 @@
     const endY = Math.max(230, Math.min(345, target + rand(-50, 50)));
     points.push({ x: genX + len, y: endY });
 
-    const g = (x: number) => groundAt(x) ?? GROUND_BASE;
+    const g = (x: number) => groundAt(x);
 
     if (genX > 250) {
       const kind = Math.random();
@@ -179,22 +181,6 @@
     respawnAt(lastSafeX);
   }
 
-  function fall() {
-    lives--;
-    if (lives <= 0) {
-      endGame();
-      return;
-    }
-    let landing = lastSafeX;
-    for (let x = heroX; x < heroX + 500; x += 4) {
-      if (groundAt(x) !== null) {
-        landing = x + 36;
-        break;
-      }
-    }
-    respawnAt(landing);
-  }
-
   // Looks ahead for a spike group the current jump would land on and
   // returns the horizontal speed needed in the air to clear it.
   function jumpAssistSpeed(): number {
@@ -223,7 +209,7 @@
   function respawnAt(x: number) {
     airTargetVx = 0;
     heroX = x;
-    heroY = (groundAt(x) ?? GROUND_BASE) - HERO / 2;
+    heroY = groundAt(x) - HERO / 2;
     vx = BASE_SPEED;
     vy = 0;
     onGround = true;
@@ -252,7 +238,7 @@
 
     const gHere = groundAt(heroX);
     const gAhead = groundAt(heroX + 12);
-    const slope = gHere !== null && gAhead !== null ? (gAhead - gHere) / 12 : 0;
+    const slope = (gAhead - gHere) / 12;
 
     const speedGoal = BASE_SPEED + Math.min(distance / 4000, 1.8) + (rolling > 0 ? 1.2 : 0);
     if (onGround) {
@@ -275,36 +261,26 @@
 
     const groundY = groundAt(heroX);
     if (onGround) {
-      if (groundY === null) {
+      const targetY = groundY - HERO / 2;
+      if (targetY - heroY > 6) {
         onGround = false;
         vy = 0;
       } else {
-        const targetY = groundY - HERO / 2;
-        if (targetY - heroY > 6) {
-          onGround = false;
-          vy = 0;
-        } else {
-          heroY = targetY;
-        }
+        heroY = targetY;
       }
     }
     if (!onGround) {
       vy += GRAVITY;
       if (vy > 12) vy = 12;
       heroY += vy;
-      if (groundY !== null && vy >= 0 && heroY + HERO / 2 >= groundY) {
+      if (vy >= 0 && heroY + HERO / 2 >= groundY) {
         heroY = groundY - HERO / 2;
         vy = 0;
         onGround = true;
         airTargetVx = 0;
       }
     }
-    if (onGround && groundY !== null) lastSafeX = heroX;
-
-    if (heroY - HERO / 2 > HEIGHT + 10) {
-      fall();
-      return;
-    }
+    if (onGround) lastSafeX = heroX;
 
     for (const r of ringList) {
       if (!r.taken && Math.abs(r.x - heroX) < HERO / 2 + 6 && Math.abs(r.y - heroY) < HERO / 2 + 6) {
@@ -345,7 +321,7 @@
         if (e.x < e.minX) { e.x = e.minX; e.dir = 1; }
         if (e.x > e.maxX) { e.x = e.maxX; e.dir = -1; }
         const gy = groundAt(e.x);
-        if (gy !== null) e.y = gy - 14;
+        e.y = gy - 14;
       } else {
         e.x += e.dir * 1.1;
         if (e.x < e.minX) { e.x = e.minX; e.dir = 1; }
@@ -429,44 +405,22 @@
     const startX = Math.floor(cameraX / 4) * 4;
     ctx.fillStyle = '#b5651d';
     ctx.beginPath();
-    let drawing = false;
+    ctx.moveTo(startX - cameraX, HEIGHT);
     for (let x = startX; x <= cameraX + WIDTH + 4; x += 4) {
-      const gy = groundAt(x);
-      if (gy === null) {
-        if (drawing) {
-          ctx.lineTo(x - 4 - cameraX, HEIGHT);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          drawing = false;
-        }
-        continue;
-      }
-      if (!drawing) {
-        ctx.moveTo(x - cameraX, HEIGHT);
-        drawing = true;
-      }
-      ctx.lineTo(x - cameraX, gy);
+      ctx.lineTo(x - cameraX, groundAt(x));
     }
-    if (drawing) {
-      ctx.lineTo(WIDTH + 8, HEIGHT);
-      ctx.closePath();
-      ctx.fill();
-    }
+    ctx.lineTo(WIDTH + 8, HEIGHT);
+    ctx.closePath();
+    ctx.fill();
 
     ctx.save();
     ctx.beginPath();
-    drawing = false;
+    ctx.moveTo(startX - cameraX, HEIGHT);
     for (let x = startX; x <= cameraX + WIDTH + 4; x += 4) {
-      const gy = groundAt(x);
-      if (gy === null) {
-        if (drawing) { ctx.lineTo(x - 4 - cameraX, HEIGHT); ctx.closePath(); drawing = false; }
-        continue;
-      }
-      if (!drawing) { ctx.moveTo(x - cameraX, HEIGHT); drawing = true; }
-      ctx.lineTo(x - cameraX, gy + 14);
+      ctx.lineTo(x - cameraX, groundAt(x) + 14);
     }
-    if (drawing) { ctx.lineTo(WIDTH + 8, HEIGHT); ctx.closePath(); }
+    ctx.lineTo(WIDTH + 8, HEIGHT);
+    ctx.closePath();
     ctx.clip();
     ctx.fillStyle = '#8d4e1b';
     const off = ((cameraX % 32) + 32) % 32;
@@ -481,12 +435,9 @@
     ctx.lineWidth = 12;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    drawing = false;
-    for (let x = startX; x <= cameraX + WIDTH + 4; x += 4) {
-      const gy = groundAt(x);
-      if (gy === null) { drawing = false; continue; }
-      if (!drawing) { ctx.moveTo(x - cameraX, gy + 2); drawing = true; }
-      else ctx.lineTo(x - cameraX, gy + 2);
+    ctx.moveTo(startX - cameraX, groundAt(startX) + 2);
+    for (let x = startX + 4; x <= cameraX + WIDTH + 4; x += 4) {
+      ctx.lineTo(x - cameraX, groundAt(x) + 2);
     }
     ctx.stroke();
 
@@ -615,7 +566,6 @@
   function slopeAt(x: number): number {
     const a = groundAt(x - 8);
     const b = groundAt(x + 8);
-    if (a === null || b === null) return 0;
     return (b - a) / 16;
   }
 
