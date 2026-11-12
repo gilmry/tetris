@@ -487,9 +487,23 @@
     <Herisson />
   </div>
 {/if}
+{#if buildId && selectedGame !== 'menu'}
+  <span class="build-tag" aria-hidden="true">v {buildId}</span>
+{/if}
 </div>
 
 <style>
+  .build-tag {
+    position: fixed;
+    right: 6px;
+    bottom: 2px;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 1001;
+  }
+
   .app {
     width: 100%;
   }
