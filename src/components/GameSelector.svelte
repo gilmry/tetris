@@ -22,8 +22,6 @@
 
   type Game = 'menu' | 'tetris' | 'blockblast' | 'memory' | 'invaders' | 'course' | 'pong' | 'serpent' | 'taupe' | 'simon' | 'plateforme' | 'briques' | 'oiseau' | 'nuages' | 'labyrinthe' | 'puissance4' | 'grenouille' | 'ballons' | 'j2048' | 'morpion' | 'herisson';
 
-  export let buildId = '';
-
   let selectedGame: Game = 'menu';
 
   function selectGame(game: Game) {
@@ -262,9 +260,6 @@
         <div class="play-button" aria-hidden="true">▶️ Jouer</div>
       </button>
     </div>
-    {#if buildId}
-      <p class="build-id">Version {buildId}</p>
-    {/if}
   </div>
 {:else if selectedGame === 'tetris'}
   <div class="game-wrapper">
@@ -484,26 +479,12 @@
     >
       ⬅️ Menu
     </button>
-    <Herisson {buildId} />
+    <Herisson />
   </div>
-{/if}
-{#if buildId && selectedGame !== 'menu'}
-  <span class="build-tag" aria-hidden="true">v {buildId}</span>
 {/if}
 </div>
 
 <style>
-  .build-tag {
-    position: fixed;
-    right: 6px;
-    bottom: 2px;
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-family: monospace;
-    pointer-events: none;
-    z-index: 1001;
-  }
-
   .app {
     width: 100%;
   }
@@ -534,12 +515,6 @@
     font-weight: bold;
   }
 
-  .build-id {
-    margin: 2rem 0 0 0;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.55);
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-  }
 
   .game-cards {
     display: grid;

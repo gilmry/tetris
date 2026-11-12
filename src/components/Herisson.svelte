@@ -24,6 +24,7 @@
   interface Enemy { x: number; y: number; kind: 'crab' | 'bee'; minX: number; maxX: number; dir: number; alive: boolean; wobble: number }
   interface Spring { x: number; y: number; bounce: number }
   interface Spike { x: number; y: number }
+  interface Gap { x1: number; x2: number }
   interface Particle { x: number; y: number; vx: number; vy: number; life: number }
 
   let canvas: HTMLCanvasElement;
@@ -33,8 +34,6 @@
   let score = 0;
   let rings = 0;
   let lives = MAX_LIVES;
-  export let buildId = '';
-
   const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
@@ -58,6 +57,8 @@
   let enemies: Enemy[] = [];
   let springs: Spring[] = [];
   let spikes: Spike[] = [];
+  let gaps: Gap[] = [];
+  let inPit = false;
   let particles: Particle[] = [];
   let genX = 0;
   let lastHazardEnd = 0;
@@ -86,6 +87,12 @@
     return points[points.length - 1].y;
   }
 
+  // Small ravines are holes cut into the otherwise continuous terrain.
+  function gapAt(x: number): Gap | undefined {
+    for (const g of gaps) if (x > g.x1 && x < g.x2) return g;
+    return undefined;
+  }
+
   function lastY(): number {
     return points.length ? points[points.length - 1].y : GROUND_BASE;
   }
@@ -94,6 +101,17 @@
     const difficulty = Math.min(genX / 6000, 1);
     const startY = lastY();
     const roll = Math.random();
+
+    if (genX > 900 && roll < 0.16 && genX - lastHazardEnd > HAZARD_GAP) {
+      // Flat run-up, a narrow hole, flat landing: easy to clear with any jump.
+      const w = rand(34, 48);
+      points.push({ x: genX, y: startY });
+      gaps.push({ x1: genX + 34, x2: genX + 34 + w });
+      genX += 68 + w;
+      points.push({ x: genX, y: startY });
+      lastHazardEnd = genX;
+      return;
+    }
 
     const len = rand(140, 260);
     const target = roll < 0.6
@@ -160,6 +178,7 @@
     enemies = enemies.filter(e => e.maxX > cutoff);
     springs = springs.filter(s => s.x > cutoff);
     spikes = spikes.filter(s => s.x > cutoff);
+    gaps = gaps.filter(g => g.x2 > cutoff);
   }
 
   function hurt() {
@@ -185,7 +204,7 @@
     respawnAt(lastSafeX);
   }
 
-  // Looks ahead for a spike group the current jump would land on and
+  // Looks ahead for a ravine or spike group the current jump would land in and
   // returns the horizontal speed needed in the air to clear it.
   function jumpAssistSpeed(): number {
     const airFrames = (2 * -JUMP_VY) / GRAVITY;
@@ -194,6 +213,13 @@
 
     let hazardStart = Infinity;
     let hazardEnd = -Infinity;
+
+    for (const g of gaps) {
+      if (g.x2 > heroX && g.x1 < lookahead) {
+        hazardStart = Math.min(hazardStart, g.x1);
+        hazardEnd = Math.max(hazardEnd, g.x2);
+      }
+    }
 
     for (const s of spikes) {
       if (s.x > heroX && s.x < lookahead && s.x < hazardStart + 60) {
@@ -210,8 +236,19 @@
     return Math.min(AIR_BOOST_MAX, needed);
   }
 
+  // Fell into a ravine: lose a life and restart on the far side of it.
+  function fall(gap: Gap | undefined) {
+    lives--;
+    if (lives <= 0) {
+      endGame();
+      return;
+    }
+    respawnAt(gap ? gap.x2 + 40 : lastSafeX);
+  }
+
   function respawnAt(x: number) {
     airTargetVx = 0;
+    inPit = false;
     heroX = x;
     heroY = groundAt(x) - HERO / 2;
     vx = BASE_SPEED;
@@ -260,13 +297,20 @@
     jumpQueued = false;
     if (!onGround && airTargetVx > vx) vx += (airTargetVx - vx) * 0.25;
 
-    heroX += vx;
-    distance += vx;
+    if (!inPit) {
+      heroX += vx;
+      distance += vx;
+    }
 
     const groundY = groundAt(heroX);
+    const gap = gapAt(heroX);
+    if (gap && !inPit && heroY + HERO / 2 > groundY + 4) inPit = true;
     if (onGround) {
       const targetY = groundY - HERO / 2;
-      if (targetY - heroY > 6) {
+      if (gap) {
+        onGround = false;
+        vy = 0;
+      } else if (targetY - heroY > 6) {
         onGround = false;
         vy = 0;
       } else {
@@ -277,7 +321,7 @@
       vy += GRAVITY;
       if (vy > 12) vy = 12;
       heroY += vy;
-      if (vy >= 0 && heroY + HERO / 2 >= groundY) {
+      if (!gap && !inPit && vy >= 0 && heroY + HERO / 2 >= groundY) {
         heroY = groundY - HERO / 2;
         vy = 0;
         onGround = true;
@@ -285,6 +329,11 @@
       }
     }
     if (onGround) lastSafeX = heroX;
+
+    if (heroY - HERO / 2 > HEIGHT + 10) {
+      fall(gap);
+      return;
+    }
 
     for (const r of ringList) {
       if (!r.taken && Math.abs(r.x - heroX) < HERO / 2 + 6 && Math.abs(r.y - heroY) < HERO / 2 + 6) {
@@ -407,24 +456,43 @@
     }
 
     const startX = Math.floor(cameraX / 4) * 4;
+    const endX = cameraX + WIDTH + 8;
+    // Visible stretches of ground, split at the ravines.
+    const runs: [number, number][] = [];
+    let runStart = startX;
+    for (const g of [...gaps].sort((a, b) => a.x1 - b.x1)) {
+      if (g.x2 <= runStart || g.x1 >= endX) continue;
+      if (g.x1 > runStart) runs.push([runStart, g.x1]);
+      runStart = g.x2;
+    }
+    if (runStart < endX) runs.push([runStart, endX]);
+
+    const tracePath = (dy: number, closed: boolean) => {
+      for (const [a, b] of runs) {
+        if (closed) {
+          ctx!.moveTo(a - cameraX, HEIGHT);
+          ctx!.lineTo(a - cameraX, groundAt(a) + dy);
+        } else {
+          ctx!.moveTo(a - cameraX + 5, groundAt(a + 5) + dy);
+        }
+        const last = closed ? b : b - 5;
+        for (let x = Math.ceil((a + 1) / 4) * 4; x < last; x += 4) ctx!.lineTo(x - cameraX, groundAt(x) + dy);
+        ctx!.lineTo(last - cameraX, groundAt(last) + dy);
+        if (closed) {
+          ctx!.lineTo(b - cameraX, HEIGHT);
+          ctx!.closePath();
+        }
+      }
+    };
+
     ctx.fillStyle = '#b5651d';
     ctx.beginPath();
-    ctx.moveTo(startX - cameraX, HEIGHT);
-    for (let x = startX; x <= cameraX + WIDTH + 4; x += 4) {
-      ctx.lineTo(x - cameraX, groundAt(x));
-    }
-    ctx.lineTo(WIDTH + 8, HEIGHT);
-    ctx.closePath();
+    tracePath(0, true);
     ctx.fill();
 
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(startX - cameraX, HEIGHT);
-    for (let x = startX; x <= cameraX + WIDTH + 4; x += 4) {
-      ctx.lineTo(x - cameraX, groundAt(x) + 14);
-    }
-    ctx.lineTo(WIDTH + 8, HEIGHT);
-    ctx.closePath();
+    tracePath(14, true);
     ctx.clip();
     ctx.fillStyle = '#8d4e1b';
     const off = ((cameraX % 32) + 32) % 32;
@@ -439,10 +507,7 @@
     ctx.lineWidth = 12;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(startX - cameraX, groundAt(startX) + 2);
-    for (let x = startX + 4; x <= cameraX + WIDTH + 4; x += 4) {
-      ctx.lineTo(x - cameraX, groundAt(x) + 2);
-    }
+    tracePath(2, false);
     ctx.stroke();
 
     for (const s of springs) {
@@ -565,17 +630,6 @@
       ctx.strokeText('Attention ! 👀', WIDTH / 2, 120);
       ctx.fillText('Attention ! 👀', WIDTH / 2, 120);
     }
-
-    if (buildId) {
-      // Build stamp in two corners so any screenshot, even cropped, identifies the version.
-      ctx.font = 'bold 9px monospace';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'left';
-      ctx.fillText('v ' + buildId, 6, HEIGHT - 5);
-      ctx.textAlign = 'right';
-      ctx.fillText('v ' + buildId, WIDTH - 6, 44);
-    }
   }
 
   function slopeAt(x: number): number {
@@ -597,6 +651,8 @@
     lastHazardEnd = 0;
     freezeUntil = 0;
     airTargetVx = 0;
+    inPit = false;
+    gaps = [];
     ringList = [];
     enemies = [];
     springs = [];
