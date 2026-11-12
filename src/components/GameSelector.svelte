@@ -484,7 +484,7 @@
     >
       ⬅️ Menu
     </button>
-    <Herisson />
+    <Herisson {buildId} />
   </div>
 {/if}
 {#if buildId && selectedGame !== 'menu'}

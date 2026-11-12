@@ -33,6 +33,8 @@
   let score = 0;
   let rings = 0;
   let lives = MAX_LIVES;
+  export let buildId = '';
+
   const ticker = createLoop(() => update(), () => draw());
   let frame = 0;
 
@@ -150,7 +152,9 @@
 
   function ensureLevel() {
     while (genX < cameraX + WIDTH + 400) generateChunk();
-    const cutoff = cameraX - 150;
+    // Keep the terrain back to the last safe spot: a lost life respawns there and
+    // the camera jumps back with it, so nothing behind that point may be discarded.
+    const cutoff = Math.min(cameraX, lastSafeX - HERO_X) - 150;
     while (points.length > 2 && points[1].x < cutoff) points.shift();
     ringList = ringList.filter(r => r.x > cutoff);
     enemies = enemies.filter(e => e.maxX > cutoff);
@@ -560,6 +564,17 @@
       ctx.fillStyle = '#FFD93D';
       ctx.strokeText('Attention ! 👀', WIDTH / 2, 120);
       ctx.fillText('Attention ! 👀', WIDTH / 2, 120);
+    }
+
+    if (buildId) {
+      // Build stamp in two corners so any screenshot, even cropped, identifies the version.
+      ctx.font = 'bold 9px monospace';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.fillText('v ' + buildId, 6, HEIGHT - 5);
+      ctx.textAlign = 'right';
+      ctx.fillText('v ' + buildId, WIDTH - 6, 44);
     }
   }
 
